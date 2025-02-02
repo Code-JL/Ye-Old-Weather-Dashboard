@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import axios from 'axios';
-import { WeatherData, WeatherError } from '@/types/weather';
+import { WeatherData } from '@/types/weather';
 
 export default function Home() {
   const [city, setCity] = useState('');
@@ -32,7 +32,7 @@ export default function Home() {
       );
 
       setWeather(weatherResponse.data);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to fetch weather data');
     } finally {
       setLoading(false);
