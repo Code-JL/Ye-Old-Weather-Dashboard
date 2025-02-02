@@ -32,7 +32,7 @@ export default function Home() {
       );
 
       setWeather(weatherResponse.data);
-    } catch (_err) {
+    } catch {
       setError('Failed to fetch weather data');
     } finally {
       setLoading(false);
