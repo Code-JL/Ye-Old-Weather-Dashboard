@@ -14,7 +14,6 @@ import { useEffect } from 'react';
 
 type Props = {
   weather: WeatherData;
-  city: string;
 };
 
 interface WeatherValueProps {
@@ -91,7 +90,7 @@ function WeatherValue({
   );
 }
 
-export default function WeatherDisplay({ weather, city }: Props) {
+export default function WeatherDisplay({ weather }: Props) {
   const { settings } = useSettings();
 
   return (

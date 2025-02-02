@@ -1,33 +1,36 @@
+'use client';
+
 import { useState, useCallback } from 'react';
 
-interface ConversionResult<T> {
-  value: T | null;
+type ConversionFunction = (value: number, from: string, to: string) => number;
+
+interface ConversionState {
+  value: number | null;
   isLoading: boolean;
-  error: string | null;
+  error: Error | null;
 }
 
-export function useUnitConversion<T>(
-  conversionFn: (...args: any[]) => T,
-  errorMessage: string = 'Failed to convert unit'
-): [(...args: Parameters<typeof conversionFn>) => Promise<T>, ConversionResult<T>] {
-  const [state, setState] = useState<ConversionResult<T>>({
+export function useUnitConversion(converter: ConversionFunction): [
+  (value: number, from: string, to: string) => Promise<void>,
+  ConversionState
+] {
+  const [state, setState] = useState<ConversionState>({
     value: null,
     isLoading: false,
     error: null
   });
 
-  const convert = useCallback(async (...args: Parameters<typeof conversionFn>) => {
+  const convertUnit = useCallback(async (value: number, from: string, to: string) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const result = conversionFn(...args);
+      const result = converter(value, from, to);
       setState({ value: result, isLoading: false, error: null });
-      return result;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : errorMessage;
-      setState({ value: null, isLoading: false, error: message });
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Conversion failed');
+      setState({ value: null, isLoading: false, error });
       throw error;
     }
-  }, [conversionFn, errorMessage]);
+  }, [converter]);
 
-  return [convert, state];
+  return [convertUnit, state];
 } 
