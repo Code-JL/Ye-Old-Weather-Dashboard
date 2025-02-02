@@ -11,9 +11,6 @@ const nextConfig: NextConfig = {
   assetPrefix: isProd ? '/Ye-Old-Weather-Dashboard/' : '',
   basePath: isProd ? '/Ye-Old-Weather-Dashboard' : '',
   trailingSlash: true,
-  experimental: {
-    missingSuspenseWithCSRError: false,
-  }
-} 
+}; 
 
-export default nextConfig
+export default nextConfig;
