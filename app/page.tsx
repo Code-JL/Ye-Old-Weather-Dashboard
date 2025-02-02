@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { WeatherData } from '@/types/weather';
+import WeatherDisplay from './components/WeatherDisplay';
+import debounce from 'lodash/debounce';
 
 const getWeatherDescription = (code: number): string => {
   switch (code) {
@@ -58,11 +60,14 @@ export default function Home() {
   const fetchWeatherData = async (lat: number, lon: number) => {
     try {
       const weatherResponse = await axios.get(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weathercode`
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weathercode&decimal_places=3`
       );
+      if (!weatherResponse.data) {
+        throw new Error('No data received from weather API');
+      }
       setWeather(weatherResponse.data);
-    } catch {
-      setError('Failed to fetch weather data');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to fetch weather data');
     }
   };
 
@@ -88,6 +93,15 @@ export default function Home() {
     }
   };
 
+  const debouncedFetchWeather = useCallback(
+    debounce(() => {
+      if (city.trim().length > 2) {
+        fetchWeather();
+      }
+    }, 500),
+    [city, fetchWeather]
+  );
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8">
       <div className="max-w-6xl mx-auto">
@@ -104,7 +118,10 @@ export default function Home() {
               <input
                 type="text"
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
+                onChange={(e) => {
+                  setCity(e.target.value);
+                  debouncedFetchWeather();
+                }}
                 placeholder="Enter city name"
                 className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-800 text-sm 
                   text-mono-900 dark:text-mono-100 dark:bg-mono-700 
@@ -131,32 +148,7 @@ export default function Home() {
               Loading your local weather...
             </div>
           ) : weather && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Column 1: Basic Weather Info */}
-              <div className="space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg">
-                <h3 className="font-semibold text-lg mb-3">Current Conditions</h3>
-                <p className="border-b border-mono-200 pb-2">Temperature: {weather.current.temperature_2m}°C</p>
-                <p className="border-b border-mono-200 pb-2">Feels like: {weather.current.apparent_temperature}°C</p>
-                <p className="border-b border-mono-200 pb-2">Humidity: {weather.current.relative_humidity_2m}%</p>
-                <p>Wind Speed: {weather.current.wind_speed_10m}km/h</p>
-              </div>
-
-              {/* Column 2: Precipitation Info */}
-              <div className="space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg">
-                <h3 className="font-semibold text-lg mb-3">Precipitation</h3>
-                <p className="border-b border-mono-200 pb-2">Amount: {weather.current.precipitation}mm</p>
-                <p>Type: {getWeatherDescription(weather.current.weathercode)}</p>
-              </div>
-
-              {/* Column 3: AI Analysis Placeholder */}
-              <div className="space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg">
-                <h3 className="font-semibold text-lg mb-3">Weather Analysis</h3>
-                <p className="text-mono-600 dark:text-mono-300 italic">
-                  &ldquo;Placeholder for AI-powered weather analysis. This space will contain
-                  a detailed explanation of current and upcoming weather patterns.&rdquo;
-                </p>
-              </div>
-            </div>
+            <WeatherDisplay weather={weather} city={city} />
           )}
         </div>
       </div>
