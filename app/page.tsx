@@ -1,29 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { WeatherData } from '@/types/weather';
 import WeatherDisplay from './components/WeatherDisplay';
 import debounce from 'lodash/debounce';
-
-const getWeatherDescription = (code: number): string => {
-  switch (code) {
-    case 0: return 'Clear sky';
-    case 1: case 2: case 3: return 'Partly cloudy';
-    case 45: case 48: return 'Foggy';
-    case 51: case 52: case 53: case 54: case 55: return 'Drizzle';
-    case 56: case 57: return 'Freezing Drizzle';
-    case 61: case 62: case 63: case 64: case 65: return 'Rain';
-    case 66: case 67: return 'Freezing Rain';
-    case 71: case 72: case 73: case 74: case 75: return 'Snow';
-    case 77: return 'Snow grains';
-    case 80: case 81: case 82: return 'Rain showers';
-    case 85: case 86: return 'Snow showers';
-    case 95: return 'Thunderstorm';
-    case 96: case 97: case 98: case 99: return 'Thunderstorm with hail';
-    default: return 'Unknown';
-  }
-};
 
 export default function Home() {
   const [city, setCity] = useState('');
@@ -93,65 +74,37 @@ export default function Home() {
     }
   };
 
-  const debouncedFetchWeather = useCallback(
-    debounce(() => {
-      if (city.trim().length > 2) {
-        fetchWeather();
-      }
-    }, 500),
-    [city, fetchWeather]
-  );
+  // Memoize the debounced function with explicit dependencies
+  const debouncedFetchWeather = debounce(() => {
+    if (city.trim().length > 2) {
+      fetchWeather();
+    }
+  }, 500);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-5xl font-title font-normal text-mono-800 dark:text-mono-100 text-center mb-8">
-          Ye Olde Weather Dashboard
-        </h1>
-        
-        <div className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-            <div className="flex-1 text-center">
-              <h2 className="text-2xl font-semibold">{city}</h2>
-            </div>
-            <div className="flex gap-2 w-full sm:w-1/3">
-              <input
-                type="text"
-                value={city}
-                onChange={(e) => {
-                  setCity(e.target.value);
-                  debouncedFetchWeather();
-                }}
-                placeholder="Enter city name"
-                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-800 text-sm 
-                  text-mono-900 dark:text-mono-100 dark:bg-mono-700 
-                  placeholder:text-mono-400 dark:placeholder:text-mono-500"
-              />
-              <button
-                onClick={fetchWeather}
-                disabled={loading}
-                className="px-4 py-2 bg-mono-800 text-mono-100 rounded-lg hover:bg-mono-900 
-                  disabled:opacity-50 text-sm whitespace-nowrap dark:bg-mono-700 
-                  dark:hover:bg-mono-600 dark:text-mono-100"
-              >
-                {loading ? 'Loading...' : 'Search'}
-              </button>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mt-4 text-red-500 text-center">{error}</div>
-          )}
-
-          {initialLoad ? (
-            <div className="mt-4 text-mono-600 text-center">
-              Loading your local weather...
-            </div>
-          ) : weather && (
-            <WeatherDisplay weather={weather} city={city} />
-          )}
-        </div>
+    <main className="max-w-6xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <input
+          type="text"
+          value={city}
+          onChange={(e) => {
+            setCity(e.target.value);
+            debouncedFetchWeather();
+          }}
+          placeholder="Enter city name..."
+          className="w-full p-2 rounded-lg bg-mono-50 dark:bg-mono-800 border border-mono-200 dark:border-mono-700"
+        />
       </div>
+
+      {initialLoad ? (
+        <div className="text-center">Loading...</div>
+      ) : error ? (
+        <div className="text-red-500 text-center">{error}</div>
+      ) : loading ? (
+        <div className="text-center">Fetching weather data...</div>
+      ) : weather ? (
+        <WeatherDisplay weather={weather} />
+      ) : null}
     </main>
   );
 }
