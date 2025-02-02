@@ -2,20 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Add custom base styles */
+@layer base {
+  body {
+    @apply antialiased;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* Add custom component classes */
+@layer components {
+  .weather-card {
+    @apply bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow;
+  }
+  
+  .input-field {
+    @apply px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-weather-primary;
+  }
+  
+  .button-primary {
+    @apply px-4 py-2 bg-weather-primary text-white rounded-lg hover:bg-opacity-90 transition-colors;
+  }
 }

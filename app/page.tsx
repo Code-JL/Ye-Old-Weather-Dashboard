@@ -1,104 +1,87 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import axios from 'axios';
+import { WeatherData, WeatherError } from '@/types/weather';
 
 export default function Home() {
-  // Get the base path for assets
-  const basePath = process.env.NODE_ENV === 'production' ? '/Ye-Old-Weather-Dashboard' : '';
-  
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src={`${basePath}/next.svg`}
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [city, setCity] = useState('');
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src={`${basePath}/vercel.svg`}
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const fetchWeather = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Get coordinates for the city
+      const geoResponse = await axios.get(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`
+      );
+
+      if (!geoResponse.data.results?.[0]) {
+        throw new Error('City not found');
+      }
+
+      const { latitude, longitude } = geoResponse.data.results[0];
+
+      // Get weather data
+      const weatherResponse = await axios.get(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m`
+      );
+
+      setWeather(weatherResponse.data);
+    } catch (err) {
+      setError('Failed to fetch weather data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 p-8">
+      <div className="max-w-md mx-auto">
+        <h1 className="text-4xl font-bold text-mono-800 text-center mb-8">
+          Ye Olde Weather Dashboard
+        </h1>
+        
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Enter city name"
+              className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-800"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <button
+              onClick={fetchWeather}
+              disabled={loading}
+              className="px-4 py-2 bg-mono-800 text-mono-100 rounded-lg hover:bg-mono-900 disabled:opacity-50"
+            >
+              {loading ? 'Loading...' : 'Search'}
+            </button>
+          </div>
+
+          {error && (
+            <div className="mt-4 text-red-500 text-center">{error}</div>
+          )}
+
+          {weather && (
+            <div className="mt-6 text-mono-900">
+              <h2 className="text-2xl font-semibold mb-4">{city}</h2>
+              <div className="space-y-2">
+                <p className="border-b border-mono-200 pb-2">Temperature: {weather.current.temperature_2m}°C</p>
+                <p className="border-b border-mono-200 pb-2">Feels like: {weather.current.apparent_temperature}°C</p>
+                <p className="border-b border-mono-200 pb-2">Humidity: {weather.current.relative_humidity_2m}%</p>
+                <p className="border-b border-mono-200 pb-2">Precipitation: {weather.current.precipitation}mm</p>
+                <p>Wind Speed: {weather.current.wind_speed_10m}km/h</p>
+              </div>
+            </div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src={`${basePath}/file.svg`}
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src={`${basePath}/window.svg`}
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src={`${basePath}/globe.svg`}
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+    </main>
   );
 }
