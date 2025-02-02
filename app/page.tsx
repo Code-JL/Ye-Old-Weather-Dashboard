@@ -89,13 +89,13 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 p-8">
+    <main className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-mono-800 text-center mb-8">
+        <h1 className="text-5xl font-title font-normal text-mono-800 dark:text-mono-100 text-center mb-8">
           Ye Olde Weather Dashboard
         </h1>
         
-        <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
             <div className="flex-1 text-center">
               <h2 className="text-2xl font-semibold">{city}</h2>
@@ -106,12 +106,16 @@ export default function Home() {
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="Enter city name"
-                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-800 text-sm"
+                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-800 text-sm 
+                  text-mono-900 dark:text-mono-100 dark:bg-mono-700 
+                  placeholder:text-mono-400 dark:placeholder:text-mono-500"
               />
               <button
                 onClick={fetchWeather}
                 disabled={loading}
-                className="px-4 py-2 bg-mono-800 text-mono-100 rounded-lg hover:bg-mono-900 disabled:opacity-50 text-sm whitespace-nowrap"
+                className="px-4 py-2 bg-mono-800 text-mono-100 rounded-lg hover:bg-mono-900 
+                  disabled:opacity-50 text-sm whitespace-nowrap dark:bg-mono-700 
+                  dark:hover:bg-mono-600 dark:text-mono-100"
               >
                 {loading ? 'Loading...' : 'Search'}
               </button>
@@ -129,7 +133,7 @@ export default function Home() {
           ) : weather && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Column 1: Basic Weather Info */}
-              <div className="space-y-2 p-4 bg-mono-50 rounded-lg">
+              <div className="space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg">
                 <h3 className="font-semibold text-lg mb-3">Current Conditions</h3>
                 <p className="border-b border-mono-200 pb-2">Temperature: {weather.current.temperature_2m}°C</p>
                 <p className="border-b border-mono-200 pb-2">Feels like: {weather.current.apparent_temperature}°C</p>
@@ -138,18 +142,18 @@ export default function Home() {
               </div>
 
               {/* Column 2: Precipitation Info */}
-              <div className="space-y-2 p-4 bg-mono-50 rounded-lg">
+              <div className="space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg">
                 <h3 className="font-semibold text-lg mb-3">Precipitation</h3>
                 <p className="border-b border-mono-200 pb-2">Amount: {weather.current.precipitation}mm</p>
                 <p>Type: {getWeatherDescription(weather.current.weathercode)}</p>
               </div>
 
               {/* Column 3: AI Analysis Placeholder */}
-              <div className="space-y-2 p-4 bg-mono-50 rounded-lg">
+              <div className="space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg">
                 <h3 className="font-semibold text-lg mb-3">Weather Analysis</h3>
-                <p className="text-mono-600 italic">
-                  "Placeholder for AI-powered weather analysis. This space will contain
-                  a detailed explanation of current and upcoming weather patterns."
+                <p className="text-mono-600 dark:text-mono-300 italic">
+                  &ldquo;Placeholder for AI-powered weather analysis. This space will contain
+                  a detailed explanation of current and upcoming weather patterns.&rdquo;
                 </p>
               </div>
             </div>

@@ -1,12 +1,19 @@
+import type { Config } from "tailwindcss";
+
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: 'class', // Enable dark mode with class strategy
   theme: {
     extend: {
+      fontFamily: {
+        mono: ['var(--font-jetbrains)', 'monospace'],
+        title: ['var(--font-title)', 'serif'],
+      },
       colors: {
         mono: {
           50: '#f9fafb',
@@ -24,4 +31,4 @@ module.exports = {
     },
   },
   plugins: [],
-}
+} satisfies Config;
