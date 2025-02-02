@@ -12,7 +12,7 @@ export default {
     extend: {
       fontFamily: {
         mono: ['var(--font-jetbrains)', 'monospace'],
-        title: ['var(--font-title)', 'serif'],
+        title: ['PragmaticaLima', 'serif'],
       },
       colors: {
         mono: {

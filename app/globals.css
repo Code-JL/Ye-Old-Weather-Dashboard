@@ -23,3 +23,13 @@
     @apply px-4 py-2 bg-weather-primary text-white rounded-lg hover:bg-opacity-90 transition-colors;
   }
 }
+
+@font-face {
+  font-family: 'PragmaticaLima';
+  src: url('/fonts/1584-Pragmatica-Lima.woff2') format('woff2'),
+       url('/fonts/1584-Pragmatica-Lima.woff') format('woff'),
+       url('/fonts/1584-Pragmatica-Lima.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
