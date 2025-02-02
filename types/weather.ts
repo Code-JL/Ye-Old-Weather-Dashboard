@@ -5,6 +5,7 @@ export interface WeatherData {
         apparent_temperature: number;
         precipitation: number;
         wind_speed_10m: number;
+        weathercode: number;
     };
 }
 
