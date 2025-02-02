@@ -2,14 +2,15 @@ import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === 'production'
 
-const nextConfig = {
+const nextConfig: NextConfig = {
   reactStrictMode: true,
+  output: 'export',
   images: {
-    unoptimized: true, // Required for GitHub Pages deployment
+    unoptimized: true,
   },
   assetPrefix: isProd ? '/Ye-Old-Weather-Dashboard/' : '',
   basePath: isProd ? '/Ye-Old-Weather-Dashboard' : '',
-  output: 'export'
+  trailingSlash: true,
 } 
 
 export default nextConfig
