@@ -75,7 +75,7 @@ export default function SettingsDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg bg-mono-200 dark:bg-mono-700 transition-colors"
+        className="p-2 rounded-lg bg-mono-200 dark:bg-mono-700 transition-colors transition-transform active:scale-95"
         aria-label="Settings"
       >
         <svg 

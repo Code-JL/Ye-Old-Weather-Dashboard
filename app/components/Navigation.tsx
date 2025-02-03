@@ -3,6 +3,7 @@
 import { ThemeProvider } from 'next-themes';
 import { SettingsProvider } from '../contexts/SettingsContext';
 import ThemeToggle from './ThemeToggle';
+import LocationButton from './LocationButton';
 import SettingsDropdown from './SettingsDropdown';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -19,6 +20,7 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
                 </span>
               </div>
               <div className="flex items-center space-x-2">
+                <LocationButton />
                 <ThemeToggle />
                 <ErrorBoundary fallback={
                   <button 
