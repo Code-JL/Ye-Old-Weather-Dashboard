@@ -1,5 +1,75 @@
+import { useMemo } from 'react';
+
+// Type definitions for supported units
+export type TemperatureUnit = 'C' | 'F' | 'K' | 'R' | 'Re' | 'Ro' | 'N' | 'D';
+export type WindSpeedUnit = 'ms' | 'kts' | 'mph' | 'kmh' | 'fts' | 'bf' | 'f' | 'ef' | 'ss';
+export type HumidityUnit = 'percent' | 'decimal';
+export type PrecipitationUnit = 'mm' | 'in' | 'cm';
+
+// Conversion factors
+const WIND_SPEED_TO_MS: Record<WindSpeedUnit, number> = {
+  ms: 1,
+  kts: 0.514444,
+  mph: 0.44704,
+  kmh: 0.277778,
+  fts: 0.3048,
+  bf: 1, // Not used directly
+  f: 1,  // Not used directly
+  ef: 1, // Not used directly
+  ss: 1  // Not used directly
+};
+
+// Memoized scale thresholds
+const BEAUFORT_SCALE = [
+  { threshold: 0.5, value: 0 },
+  { threshold: 1.5, value: 1 },
+  { threshold: 3.3, value: 2 },
+  { threshold: 5.5, value: 3 },
+  { threshold: 7.9, value: 4 },
+  { threshold: 10.7, value: 5 },
+  { threshold: 13.8, value: 6 },
+  { threshold: 17.1, value: 7 },
+  { threshold: 20.7, value: 8 },
+  { threshold: 24.4, value: 9 },
+  { threshold: 28.4, value: 10 },
+  { threshold: 32.6, value: 11 }
+] as const;
+
+const FUJITA_SCALE = [
+  { threshold: 39, value: 0 },
+  { threshold: 50, value: 1 },
+  { threshold: 61, value: 2 },
+  { threshold: 74, value: 3 },
+  { threshold: 89, value: 4 }
+] as const;
+
+const ENHANCED_FUJITA_SCALE = [
+  { threshold: 38, value: 0 },
+  { threshold: 49, value: 1 },
+  { threshold: 60, value: 2 },
+  { threshold: 74, value: 3 },
+  { threshold: 89, value: 4 }
+] as const;
+
+const SAFFIR_SIMPSON_SCALE = [
+  { threshold: 33, value: 0 },
+  { threshold: 43, value: 1 },
+  { threshold: 49, value: 2 },
+  { threshold: 58, value: 3 },
+  { threshold: 70, value: 4 }
+] as const;
+
+// Helper function to find scale value
+function findScaleValue(ms: number, scale: readonly { threshold: number; value: number }[]): number {
+  const result = scale.find(entry => ms < entry.threshold);
+  return result ? result.value : scale.length;
+}
+
 // Temperature conversions
-export const convertTemperature = (value: number, from: string, to: string): number => {
+export const convertTemperature = (value: number, from: TemperatureUnit, to: TemperatureUnit): number => {
+  if (isNaN(value)) throw new Error('Invalid temperature value');
+  if (from === to) return value;
+
   // First convert to Celsius as base unit
   let celsius = value;
   switch (from) {
@@ -22,101 +92,53 @@ export const convertTemperature = (value: number, from: string, to: string): num
     case 'Ro': return celsius * 21/40 + 7.5;
     case 'N': return celsius * 33/100;
     case 'D': return (100 - celsius) * 3/2;
-    default: return celsius;
   }
 };
 
 // Wind speed conversions
-export const convertWindSpeed = (value: number, from: string, to: string): number => {
-  // Convert to m/s as base unit
-  let ms = value;
-  switch (from) {
-    case 'kts': ms = value * 0.514444; break;
-    case 'mph': ms = value * 0.44704; break;
-    case 'kmh': ms = value * 0.277778; break;
-    case 'fts': ms = value * 0.3048; break;
-  }
+export const convertWindSpeed = (value: number, from: WindSpeedUnit, to: WindSpeedUnit): number => {
+  if (isNaN(value)) throw new Error('Invalid wind speed value');
+  if (from === to) return value;
 
-  // Convert from m/s to target unit
+  // Convert to m/s as base unit
+  const ms = value * WIND_SPEED_TO_MS[from];
+
+  // Convert from m/s to target unit or scale
   switch (to) {
     case 'ms': return ms;
-    case 'kts': return ms / 0.514444;
-    case 'mph': return ms / 0.44704;
-    case 'kmh': return ms / 0.277778;
-    case 'fts': return ms / 0.3048;
-    case 'bf': return beaufortScale(ms);
-    case 'f': return fujitaScale(ms);
-    case 'ef': return enhancedFujitaScale(ms);
-    case 'ss': return saffirSimpsonScale(ms);
-    default: return ms;
+    case 'kts': return ms / WIND_SPEED_TO_MS.kts;
+    case 'mph': return ms / WIND_SPEED_TO_MS.mph;
+    case 'kmh': return ms / WIND_SPEED_TO_MS.kmh;
+    case 'fts': return ms / WIND_SPEED_TO_MS.fts;
+    case 'bf': return findScaleValue(ms, BEAUFORT_SCALE);
+    case 'f': return findScaleValue(ms, FUJITA_SCALE);
+    case 'ef': return findScaleValue(ms, ENHANCED_FUJITA_SCALE);
+    case 'ss': return findScaleValue(ms, SAFFIR_SIMPSON_SCALE);
   }
-};
-
-// Special scale conversions
-const beaufortScale = (ms: number): number => {
-  if (ms < 0.5) return 0;
-  if (ms < 1.5) return 1;
-  if (ms < 3.3) return 2;
-  if (ms < 5.5) return 3;
-  if (ms < 7.9) return 4;
-  if (ms < 10.7) return 5;
-  if (ms < 13.8) return 6;
-  if (ms < 17.1) return 7;
-  if (ms < 20.7) return 8;
-  if (ms < 24.4) return 9;
-  if (ms < 28.4) return 10;
-  if (ms < 32.6) return 11;
-  return 12;
-};
-
-const fujitaScale = (ms: number): number => {
-  if (ms < 39) return 0;
-  if (ms < 50) return 1;
-  if (ms < 61) return 2;
-  if (ms < 74) return 3;
-  if (ms < 89) return 4;
-  return 5;
-};
-
-const enhancedFujitaScale = (ms: number): number => {
-  if (ms < 38) return 0;
-  if (ms < 49) return 1;
-  if (ms < 60) return 2;
-  if (ms < 74) return 3;
-  if (ms < 89) return 4;
-  return 5;
-};
-
-const saffirSimpsonScale = (ms: number): number => {
-  if (ms < 33) return 0;
-  if (ms < 43) return 1;
-  if (ms < 49) return 2;
-  if (ms < 58) return 3;
-  if (ms < 70) return 4;
-  return 5;
 };
 
 // Humidity conversion
-export const convertHumidity = (value: number, from: string, to: string): number => {
-  // If units are the same, return original value
+export const convertHumidity = (value: number, from: HumidityUnit, to: HumidityUnit): number => {
+  if (isNaN(value)) throw new Error('Invalid humidity value');
   if (from === to) return value;
 
-  // Convert from percent to decimal
+  // Convert between percent and decimal
   if (from === 'percent' && to === 'decimal') {
     return value / 100;
   }
   
-  // Convert from decimal to percent
   if (from === 'decimal' && to === 'percent') {
     return value * 100;
   }
 
-  // Default case: return original value
   return value;
 };
 
 // Precipitation conversions
-export const convertPrecipitation = (value: number, from: string, to: string): number => {
+export const convertPrecipitation = (value: number, from: PrecipitationUnit, to: PrecipitationUnit): number => {
+  if (isNaN(value)) throw new Error('Invalid precipitation value');
+  if (from === to) return value;
+
   // Convert to mm as base unit
   let mm = value;
   switch (from) {
@@ -129,6 +151,5 @@ export const convertPrecipitation = (value: number, from: string, to: string): n
     case 'mm': return mm;
     case 'in': return mm / 25.4;
     case 'cm': return mm / 10;
-    default: return mm;
   }
 }; 

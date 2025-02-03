@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { WeatherData } from '@/types/weather';
 import WeatherDisplay from './components/WeatherDisplay';
@@ -70,8 +70,10 @@ export default function Home() {
     }
   };
 
-  const fetchWeatherData = async (lat: number, lon: number) => {
+  // Memoize the fetchWeatherData function
+  const fetchWeatherData = useCallback(async (lat: number, lon: number) => {
     try {
+      setLoading(true);
       const weatherResponse = await axios.get(
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weathercode&decimal_places=3`
       );
@@ -79,18 +81,26 @@ export default function Home() {
         throw new Error('No data received from weather API');
       }
       setWeather(weatherResponse.data);
+      setError('');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to fetch weather data');
+      setWeather(null);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchWeather = async (searchCity?: string) => {
+  // Memoize the fetchWeather function
+  const fetchWeather = useCallback(async (searchCity?: string) => {
+    if (!searchCity && !inputValue.trim()) return;
+    
     try {
       setLoading(true);
       setError('');
       
+      const searchTerm = searchCity || inputValue;
       const geoResponse = await axios.get(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${searchCity || inputValue}&count=10&language=en&format=json`
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchTerm)}&count=10&language=en&format=json`
       );
 
       if (!geoResponse.data.results?.length) {
@@ -101,34 +111,44 @@ export default function Home() {
         const { latitude, longitude, name } = geoResponse.data.results[0];
         setCity(name);
         setCityResults([]);
-        // Update URL with complete location data
         router.push(`?city=${encodeURIComponent(name)}&lat=${latitude}&lon=${longitude}`);
         await fetchWeatherData(latitude, longitude);
       } else {
         setCityResults(geoResponse.data.results);
       }
-    } catch {
-      setError('Failed to fetch weather data');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to fetch weather data');
+      setCityResults([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [inputValue, router, fetchWeatherData]);
 
-  const selectCity = async (result: CityResult) => {
+  // Memoize the selectCity function
+  const selectCity = useCallback(async (result: CityResult) => {
     setCity(result.name);
     setInputValue('');
     setCityResults([]);
-    // Update URL with complete location data
     router.push(`?city=${encodeURIComponent(result.name)}&lat=${result.latitude}&lon=${result.longitude}`);
     await fetchWeatherData(result.latitude, result.longitude);
-  };
+  }, [router, fetchWeatherData]);
 
-  // Memoize the debounced function with explicit dependencies
-  const debouncedFetchWeather = debounce(() => {
-    if (city.trim().length > 2) {
-      fetchWeather();
-    }
-  }, 500);
+  // Memoize the debounced function
+  const debouncedFetchWeather = useMemo(
+    () => debounce(() => {
+      if (inputValue.trim().length > 2) {
+        fetchWeather();
+      }
+    }, 500),
+    [fetchWeather, inputValue]
+  );
+
+  // Cleanup debounced function on unmount
+  useEffect(() => {
+    return () => {
+      debouncedFetchWeather.cancel();
+    };
+  }, [debouncedFetchWeather]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8">
@@ -140,7 +160,9 @@ export default function Home() {
         <div className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
             <div className="flex-1 text-center">
-              <h2 className="text-2xl font-semibold">{city}</h2>
+              <h2 className="text-2xl font-semibold text-mono-800 dark:text-mono-100">
+                {city || 'Select a location'}
+              </h2>
             </div>
             <div className="flex gap-2 w-full sm:w-1/3 relative">
               <input
@@ -150,32 +172,42 @@ export default function Home() {
                   setInputValue(e.target.value);
                   if (e.target.value.trim().length > 2) {
                     debouncedFetchWeather();
+                  } else {
+                    setCityResults([]);
                   }
                 }}
                 placeholder={city || "Enter city name"}
                 className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-800 text-sm 
                   text-mono-900 dark:text-mono-100 dark:bg-mono-700 
-                  placeholder:text-mono-400 dark:placeholder:text-mono-500"
+                  placeholder:text-mono-400 dark:placeholder:text-mono-500
+                  transition-colors duration-200"
+                aria-label="Search for a city"
               />
               <button
                 onClick={() => fetchWeather()}
-                disabled={loading}
+                disabled={loading || !inputValue.trim()}
                 className="px-4 py-2 bg-mono-800 text-mono-100 rounded-lg hover:bg-mono-900 
-                  disabled:opacity-50 text-sm whitespace-nowrap dark:bg-mono-700 
-                  dark:hover:bg-mono-600 dark:text-mono-100"
+                  disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap 
+                  dark:bg-mono-700 dark:hover:bg-mono-600 dark:text-mono-100
+                  transition-colors duration-200"
+                aria-label={loading ? 'Loading weather data' : 'Search for weather'}
               >
                 {loading ? 'Loading...' : 'Search'}
               </button>
               
-              {/* City results dropdown */}
               {cityResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-mono-700 rounded-lg shadow-lg z-10">
+                <div 
+                  className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-mono-700 rounded-lg shadow-lg z-10
+                    max-h-60 overflow-y-auto"
+                  role="listbox"
+                >
                   {cityResults.map((result, index) => (
                     <button
-                      key={index}
+                      key={`${result.name}-${result.latitude}-${result.longitude}`}
                       onClick={() => selectCity(result)}
                       className="w-full text-left px-4 py-2 hover:bg-mono-100 dark:hover:bg-mono-600 
-                        first:rounded-t-lg last:rounded-b-lg text-sm"
+                        first:rounded-t-lg last:rounded-b-lg text-sm transition-colors duration-200"
+                      role="option"
                     >
                       {result.name}
                       {result.admin1 && `, ${result.admin1}`}
@@ -188,15 +220,21 @@ export default function Home() {
           </div>
 
           {error && (
-            <div className="mt-4 text-red-500 text-center">{error}</div>
+            <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg text-center" role="alert">
+              {error}
+            </div>
           )}
 
           {initialLoad ? (
-            <div className="mt-4 text-mono-600 text-center">
+            <div className="mt-4 text-mono-600 dark:text-mono-400 text-center animate-pulse">
               Loading your local weather...
             </div>
-          ) : weather && (
+          ) : weather ? (
             <WeatherDisplay weather={weather} />
+          ) : !error && (
+            <div className="mt-4 text-mono-600 dark:text-mono-400 text-center">
+              Enter a city name to see the weather
+            </div>
           )}
         </div>
       </div>
