@@ -84,7 +84,7 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
     if (isNearEnd && visibleHours < data.time.length) {
       setVisibleHours(prev => Math.min(prev + HOURS_TO_ADD, data.time.length));
     }
-  }, [isNearEnd, data.time.length]);
+  }, [isNearEnd, data.time.length, visibleHours]);
 
   return (
     <section className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6 mb-6">

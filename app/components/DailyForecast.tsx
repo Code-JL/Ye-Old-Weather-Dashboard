@@ -1,4 +1,4 @@
-import { DailyForecast as DailyForecastType, WeatherCode } from '@/types/weather';
+import { DailyForecast as DailyForecastType } from '@/types/weather';
 import { WEATHER_DESCRIPTIONS } from '@/types/weather';
 import { useSettings } from '@/app/contexts/SettingsContext';
 import { convertTemperature } from '@/app/utils/unitConversions';
