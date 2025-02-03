@@ -11,9 +11,9 @@ import { useEffect, useState } from 'react';
 
 export default function Navigation({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
-  const city = searchParams.get('city');
-  const admin1 = searchParams.get('admin1');
-  const country = searchParams.get('country');
+  const city = searchParams?.get('city');
+  const admin1 = searchParams?.get('admin1');
+  const country = searchParams?.get('country');
   const [currentDate, setCurrentDate] = useState('');
 
   useEffect(() => {

@@ -187,7 +187,7 @@ export default function Home() {
         fetchWeather();
       }
     }, 300),
-    [fetchWeather]
+    [fetchWeather, inputValue]
   );
 
   // Cleanup debounced function on unmount
