@@ -1,11 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useState } from 'react';
 
 export default function LocationButton() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const getLocation = async () => {
@@ -31,6 +29,7 @@ export default function LocationButton() {
       disabled={loading}
       className={`p-2 rounded-lg bg-mono-200 dark:bg-mono-700 hover:bg-mono-100 dark:hover:bg-mono-600 disabled:opacity-50 transition-transform ${loading ? 'scale-95' : ''}`}
       title="Get current location"
+      aria-label="Get current location"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -39,6 +38,7 @@ export default function LocationButton() {
         strokeWidth={1.5}
         stroke="currentColor"
         className="w-5 h-5"
+        aria-hidden="true"
       >
         <path
           strokeLinecap="round"

@@ -27,49 +27,6 @@ export default function Home() {
   const [initialLoad, setInitialLoad] = useState(true);
   const [cityResults, setCityResults] = useState<CityResult[]>([]);
 
-  // Get user's location on component mount
-  useEffect(() => {
-    const cityFromUrl = searchParams.get('city');
-    const latFromUrl = searchParams.get('lat');
-    const lonFromUrl = searchParams.get('lon');
-    
-    if (cityFromUrl && latFromUrl && lonFromUrl) {
-      // If we have complete location data in URL, use it directly
-      setCity(cityFromUrl);
-      fetchWeatherData(parseFloat(latFromUrl), parseFloat(lonFromUrl))
-        .finally(() => setInitialLoad(false));
-    } else if (cityFromUrl) {
-      // If only city name is in URL, search for it
-      setCity(cityFromUrl);
-      setInputValue(cityFromUrl);
-      fetchWeather(cityFromUrl)
-        .finally(() => setInitialLoad(false));
-    } else {
-      // Only get location by IP if no parameters in URL
-      getLocationByIP();
-    }
-  }, []);
-
-  const getLocationByIP = async () => {
-    try {
-      // Get location from IP using ipapi.co
-      const response = await axios.get('https://ipapi.co/json/');
-      const { city, latitude, longitude } = response.data;
-      
-      if (city && latitude && longitude) {
-        setCity(city);
-        await fetchWeatherData(latitude, longitude);
-      } else {
-        throw new Error('Location not found');
-      }
-    } catch (error) {
-      console.error('Failed to get location:', error);
-      setError('Failed to get location data');
-    } finally {
-      setInitialLoad(false);
-    }
-  };
-
   // Memoize the fetchWeatherData function
   const fetchWeatherData = useCallback(async (lat: number, lon: number) => {
     try {
@@ -123,6 +80,50 @@ export default function Home() {
       setLoading(false);
     }
   }, [inputValue, router, fetchWeatherData]);
+
+  // Memoize the getLocationByIP function
+  const getLocationByIP = useCallback(async () => {
+    try {
+      // Get location from IP using ipapi.co
+      const response = await axios.get('https://ipapi.co/json/');
+      const { city, latitude, longitude } = response.data;
+      
+      if (city && latitude && longitude) {
+        setCity(city);
+        await fetchWeatherData(latitude, longitude);
+      } else {
+        throw new Error('Location not found');
+      }
+    } catch (error) {
+      console.error('Failed to get location:', error);
+      setError('Failed to get location data');
+    } finally {
+      setInitialLoad(false);
+    }
+  }, [fetchWeatherData]);
+
+  // Get user's location on component mount
+  useEffect(() => {
+    const cityFromUrl = searchParams.get('city');
+    const latFromUrl = searchParams.get('lat');
+    const lonFromUrl = searchParams.get('lon');
+    
+    if (cityFromUrl && latFromUrl && lonFromUrl) {
+      // If we have complete location data in URL, use it directly
+      setCity(cityFromUrl);
+      fetchWeatherData(parseFloat(latFromUrl), parseFloat(lonFromUrl))
+        .finally(() => setInitialLoad(false));
+    } else if (cityFromUrl) {
+      // If only city name is in URL, search for it
+      setCity(cityFromUrl);
+      setInputValue(cityFromUrl);
+      fetchWeather(cityFromUrl)
+        .finally(() => setInitialLoad(false));
+    } else {
+      // Only get location by IP if no parameters in URL
+      getLocationByIP();
+    }
+  }, [searchParams, fetchWeather, fetchWeatherData, getLocationByIP]);
 
   // Memoize the selectCity function
   const selectCity = useCallback(async (result: CityResult) => {
@@ -200,14 +201,16 @@ export default function Home() {
                   className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-mono-700 rounded-lg shadow-lg z-10
                     max-h-60 overflow-y-auto"
                   role="listbox"
+                  aria-label="Search results"
                 >
-                  {cityResults.map((result, index) => (
+                  {cityResults.map((result) => (
                     <button
                       key={`${result.name}-${result.latitude}-${result.longitude}`}
                       onClick={() => selectCity(result)}
                       className="w-full text-left px-4 py-2 hover:bg-mono-100 dark:hover:bg-mono-600 
                         first:rounded-t-lg last:rounded-b-lg text-sm transition-colors duration-200"
                       role="option"
+                      aria-selected={false}
                     >
                       {result.name}
                       {result.admin1 && `, ${result.admin1}`}
