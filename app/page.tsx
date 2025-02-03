@@ -131,9 +131,9 @@ export default function Home() {
 
   // Get user's location on component mount
   useEffect(() => {
-    const cityFromUrl = searchParams.get('city');
-    const latFromUrl = searchParams.get('lat');
-    const lonFromUrl = searchParams.get('lon');
+    const cityFromUrl = searchParams?.get('city');
+    const latFromUrl = searchParams?.get('lat');
+    const lonFromUrl = searchParams?.get('lon');
     
     if (cityFromUrl && latFromUrl && lonFromUrl) {
       // If we have complete location data in URL, use it directly
