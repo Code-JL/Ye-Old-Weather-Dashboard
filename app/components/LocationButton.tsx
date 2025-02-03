@@ -1,19 +1,38 @@
 'use client';
 
 import axios from 'axios';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 export default function LocationButton() {
   const [loading, setLoading] = useState(false);
+
+  const updateLocation = useCallback((urlParams: URLSearchParams) => {
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
+    }
+  }, []);
 
   const getLocation = async () => {
     setLoading(true);
     try {
       const response = await axios.get('https://ipapi.co/json/');
-      const { city, latitude, longitude } = response.data;
+      const { 
+        city, 
+        latitude, 
+        longitude, 
+        region: admin1, 
+        country_name: country 
+      } = response.data;
       
       if (city && latitude && longitude) {
-        window.location.href = `${window.location.pathname}?city=${encodeURIComponent(city)}&lat=${latitude}&lon=${longitude}`;
+        const urlParams = new URLSearchParams();
+        urlParams.set('city', city);
+        urlParams.set('lat', latitude.toString());
+        urlParams.set('lon', longitude.toString());
+        if (admin1) urlParams.set('admin1', admin1);
+        if (country) urlParams.set('country', country);
+        updateLocation(urlParams);
       } else {
         throw new Error('Location not found');
       }

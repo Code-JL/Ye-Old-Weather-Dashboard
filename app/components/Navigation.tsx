@@ -11,6 +11,18 @@ import { useSearchParams } from 'next/navigation';
 export default function Navigation({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const city = searchParams.get('city');
+  const admin1 = searchParams.get('admin1');
+  const country = searchParams.get('country');
+
+  const getLocationString = () => {
+    if (!city) return '';
+    const parts = [decodeURIComponent(city)];
+    if (admin1) parts.push(decodeURIComponent(admin1));
+    if (country) parts.push(decodeURIComponent(country));
+    return parts.join(', ');
+  };
+
+  const locationString = getLocationString();
 
   return (
     <ThemeProvider attribute="class">
@@ -22,9 +34,12 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
                 <span className="text-xl font-title font-semibold">
                   Ye Olde Weather
                 </span>
-                {city && (
-                  <span className="text-sm text-mono-600 dark:text-mono-400 hidden sm:inline">
-                    • {decodeURIComponent(city)}
+                {locationString && (
+                  <span 
+                    className="text-sm text-mono-600 dark:text-mono-400 hidden sm:inline truncate max-w-md" 
+                    title={locationString}
+                  >
+                    • {locationString}
                   </span>
                 )}
               </div>

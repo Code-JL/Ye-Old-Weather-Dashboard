@@ -26,6 +26,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [cityResults, setCityResults] = useState<CityResult[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Memoize the fetchWeatherData function
   const fetchWeatherData = useCallback(async (lat: number, lon: number) => {
@@ -47,7 +49,25 @@ export default function Home() {
     }
   }, []);
 
-  // Memoize the fetchWeather function
+  // Memoize the selectCity function
+  const selectCity = useCallback(async (result: CityResult) => {
+    setCity(result.name);
+    setInputValue(result.name);
+    setCityResults([]);
+    setShowSuggestions(false);
+    setSelectedIndex(-1);
+    
+    const urlParams = new URLSearchParams();
+    urlParams.set('city', result.name);
+    urlParams.set('lat', result.latitude.toString());
+    urlParams.set('lon', result.longitude.toString());
+    if (result.admin1) urlParams.set('admin1', result.admin1);
+    if (result.country) urlParams.set('country', result.country);
+    router.push(`?${urlParams.toString()}`);
+    await fetchWeatherData(result.latitude, result.longitude);
+  }, [router, fetchWeatherData]);
+
+  // Update fetchWeather to include all dependencies
   const fetchWeather = useCallback(async (searchCity?: string) => {
     if (!searchCity && !inputValue.trim()) return;
     
@@ -64,32 +84,39 @@ export default function Home() {
         throw new Error('City not found');
       }
 
+      setCityResults(geoResponse.data.results);
+      setShowSuggestions(true);
+
+      // Only auto-select if it's an exact match
       if (geoResponse.data.results.length === 1) {
-        const { latitude, longitude, name } = geoResponse.data.results[0];
-        setCity(name);
-        setCityResults([]);
-        router.push(`?city=${encodeURIComponent(name)}&lat=${latitude}&lon=${longitude}`);
-        await fetchWeatherData(latitude, longitude);
-      } else {
-        setCityResults(geoResponse.data.results);
+        const result = geoResponse.data.results[0];
+        await selectCity(result);
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to fetch weather data');
       setCityResults([]);
+      setShowSuggestions(false);
     } finally {
       setLoading(false);
     }
-  }, [inputValue, router, fetchWeatherData]);
+  }, [inputValue, selectCity]);
 
   // Memoize the getLocationByIP function
   const getLocationByIP = useCallback(async () => {
     try {
       // Get location from IP using ipapi.co
       const response = await axios.get('https://ipapi.co/json/');
-      const { city, latitude, longitude } = response.data;
+      const { city, latitude, longitude, region: admin1, country_name: country } = response.data;
       
       if (city && latitude && longitude) {
         setCity(city);
+        const urlParams = new URLSearchParams();
+        urlParams.set('city', city);
+        urlParams.set('lat', latitude.toString());
+        urlParams.set('lon', longitude.toString());
+        if (admin1) urlParams.set('admin1', admin1);
+        if (country) urlParams.set('country', country);
+        router.push(`?${urlParams.toString()}`);
         await fetchWeatherData(latitude, longitude);
       } else {
         throw new Error('Location not found');
@@ -100,7 +127,7 @@ export default function Home() {
     } finally {
       setInitialLoad(false);
     }
-  }, [fetchWeatherData]);
+  }, [router, fetchWeatherData]);
 
   // Get user's location on component mount
   useEffect(() => {
@@ -125,14 +152,33 @@ export default function Home() {
     }
   }, [searchParams, fetchWeather, fetchWeatherData, getLocationByIP]);
 
-  // Memoize the selectCity function
-  const selectCity = useCallback(async (result: CityResult) => {
-    setCity(result.name);
-    setInputValue('');
-    setCityResults([]);
-    router.push(`?city=${encodeURIComponent(result.name)}&lat=${result.latitude}&lon=${result.longitude}`);
-    await fetchWeatherData(result.latitude, result.longitude);
-  }, [router, fetchWeatherData]);
+  // Handle keyboard navigation
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!showSuggestions) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev < cityResults.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => prev > 0 ? prev - 1 : prev);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && selectedIndex < cityResults.length) {
+          selectCity(cityResults[selectedIndex]);
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+        break;
+    }
+  }, [showSuggestions, cityResults, selectedIndex, selectCity]);
 
   // Memoize the debounced function
   const debouncedFetchWeather = useMemo(
@@ -140,8 +186,8 @@ export default function Home() {
       if (inputValue.trim().length > 2) {
         fetchWeather();
       }
-    }, 500),
-    [fetchWeather, inputValue]
+    }, 300),
+    [fetchWeather]
   );
 
   // Cleanup debounced function on unmount
@@ -170,12 +216,28 @@ export default function Home() {
                 type="text"
                 value={inputValue}
                 onChange={(e) => {
-                  setInputValue(e.target.value);
-                  if (e.target.value.trim().length > 2) {
-                    debouncedFetchWeather();
+                  const value = e.target.value;
+                  setInputValue(value);
+                  setSelectedIndex(-1);
+                  if (value.trim().length > 2) {
+                    fetchWeather();
                   } else {
                     setCityResults([]);
+                    setShowSuggestions(false);
                   }
+                }}
+                onKeyDown={handleKeyDown}
+                onFocus={() => {
+                  if (inputValue.trim().length > 2) {
+                    fetchWeather();
+                  }
+                }}
+                onBlur={() => {
+                  setTimeout(() => {
+                    if (!document.activeElement?.closest('#search-listbox')) {
+                      setShowSuggestions(false);
+                    }
+                  }, 300);
                 }}
                 placeholder={city || "Enter city name"}
                 className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-800 text-sm 
@@ -183,6 +245,11 @@ export default function Home() {
                   placeholder:text-mono-400 dark:placeholder:text-mono-500
                   transition-colors duration-200"
                 aria-label="Search for a city"
+                role="combobox"
+                aria-expanded={showSuggestions}
+                aria-controls="search-listbox"
+                aria-autocomplete="list"
+                aria-activedescendant={selectedIndex >= 0 ? `search-option-${selectedIndex}` : undefined}
               />
               <button
                 onClick={() => fetchWeather()}
@@ -196,21 +263,27 @@ export default function Home() {
                 {loading ? 'Loading...' : 'Search'}
               </button>
               
-              {cityResults.length > 0 && (
+              {showSuggestions && cityResults.length > 0 && (
                 <div 
+                  id="search-listbox"
                   className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-mono-700 rounded-lg shadow-lg z-10
                     max-h-60 overflow-y-auto"
                   role="listbox"
                   aria-label="Search results"
                 >
-                  {cityResults.map((result) => (
+                  {cityResults.map((result, index) => (
                     <button
                       key={`${result.name}-${result.latitude}-${result.longitude}`}
-                      onClick={() => selectCity(result)}
-                      className="w-full text-left px-4 py-2 hover:bg-mono-100 dark:hover:bg-mono-600 
-                        first:rounded-t-lg last:rounded-b-lg text-sm transition-colors duration-200"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        selectCity(result);
+                      }}
+                      className={`w-full text-left px-4 py-2 hover:bg-mono-100 dark:hover:bg-mono-600 
+                        first:rounded-t-lg last:rounded-b-lg text-sm transition-colors duration-200
+                        ${index === selectedIndex ? 'bg-mono-100 dark:bg-mono-600' : ''}`}
                       role="option"
-                      aria-selected={false}
+                      aria-selected={index === selectedIndex}
+                      id={`search-option-${index}`}
                     >
                       {result.name}
                       {result.admin1 && `, ${result.admin1}`}
