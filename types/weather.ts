@@ -102,11 +102,45 @@ export interface CurrentWeather {
 }
 
 /**
+ * Represents hourly forecast data
+ */
+export interface HourlyForecast {
+  /** Array of ISO timestamps for each hour */
+  time: string[];
+  /** Temperature at 2 meters above ground for each hour */
+  temperature_2m: number[];
+  /** Precipitation probability for each hour */
+  precipitation_probability: number[];
+  /** Weather code for each hour */
+  weathercode: WeatherCode[];
+}
+
+/**
+ * Represents daily forecast data
+ */
+export interface DailyForecast {
+  /** Array of ISO dates for each day */
+  time: string[];
+  /** Maximum temperature at 2 meters above ground for each day */
+  temperature_2m_max: number[];
+  /** Minimum temperature at 2 meters above ground for each day */
+  temperature_2m_min: number[];
+  /** Weather code for each day */
+  weathercode: WeatherCode[];
+  /** Precipitation probability max for each day */
+  precipitation_probability_max: number[];
+}
+
+/**
  * Represents the complete weather data response
  */
 export interface WeatherData {
   /** Current weather conditions */
   current: CurrentWeather;
+  /** Hourly forecast data */
+  hourly: HourlyForecast;
+  /** Daily forecast data */
+  daily: DailyForecast;
 }
 
 /**

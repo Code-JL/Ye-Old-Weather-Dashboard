@@ -7,12 +7,25 @@ import LocationButton from './LocationButton';
 import SettingsDropdown from './SettingsDropdown';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function Navigation({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const city = searchParams.get('city');
   const admin1 = searchParams.get('admin1');
   const country = searchParams.get('country');
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    const date = new Date();
+    const formattedDate = date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    setCurrentDate(formattedDate);
+  }, []);
 
   const getLocationString = () => {
     if (!city) return '';
@@ -34,6 +47,11 @@ export default function Navigation({ children }: { children: React.ReactNode }) 
                 <span className="text-xl font-title font-semibold">
                   Ye Olde Weather
                 </span>
+                {currentDate && (
+                  <span className="text-sm text-mono-600 dark:text-mono-400 hidden md:inline">
+                    • {currentDate}
+                  </span>
+                )}
                 {locationString && (
                   <span 
                     className="text-sm text-mono-600 dark:text-mono-400 hidden sm:inline truncate max-w-md" 
