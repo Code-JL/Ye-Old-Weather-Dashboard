@@ -1,5 +1,3 @@
-import { useMemo } from 'react';
-
 // Type definitions for supported units
 export type TemperatureUnit = 'C' | 'F' | 'K' | 'R' | 'Re' | 'Ro' | 'N' | 'D';
 export type WindSpeedUnit = 'ms' | 'kts' | 'mph' | 'kmh' | 'fts' | 'bf' | 'f' | 'ef' | 'ss';
