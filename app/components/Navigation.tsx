@@ -6,18 +6,27 @@ import ThemeToggle from './ThemeToggle';
 import LocationButton from './LocationButton';
 import SettingsDropdown from './SettingsDropdown';
 import { ErrorBoundary } from 'react-error-boundary';
+import { useSearchParams } from 'next/navigation';
 
 export default function Navigation({ children }: { children: React.ReactNode }) {
+  const searchParams = useSearchParams();
+  const city = searchParams.get('city');
+
   return (
     <ThemeProvider attribute="class">
       <SettingsProvider>
         <nav className="bg-white dark:bg-mono-800 shadow-lg">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16 items-center">
-              <div className="flex-1">
+              <div className="flex items-center space-x-4">
                 <span className="text-xl font-title font-semibold">
                   Ye Olde Weather
                 </span>
+                {city && (
+                  <span className="text-sm text-mono-600 dark:text-mono-400 hidden sm:inline">
+                    • {decodeURIComponent(city)}
+                  </span>
+                )}
               </div>
               <div className="flex items-center space-x-2">
                 <LocationButton />
