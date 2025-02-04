@@ -10,6 +10,7 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  actions: read
 
 jobs:
   deploy:
@@ -30,8 +31,6 @@ jobs:
         run: npm ci
 
       - name: Build
-        env:
-          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
         run: |
           npm run build || npm run build || npm run build
 

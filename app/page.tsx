@@ -7,6 +7,10 @@ import WeatherDisplay from './components/WeatherDisplay';
 import debounce from 'lodash/debounce';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+// API URLs
+const OPEN_METEO_API_URL = 'https://api.open-meteo.com/v1/forecast';
+const GEOCODING_API_URL = 'https://geocoding-api.open-meteo.com/v1/search';
+
 // Add new type at the top with other imports
 type CityResult = {
   name: string;
@@ -34,7 +38,7 @@ export default function Home() {
     try {
       setLoading(true);
       const weatherResponse = await axios.get(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weathercode&hourly=temperature_2m,precipitation_probability,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=14&decimal_places=3`
+        `${OPEN_METEO_API_URL}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weathercode&hourly=temperature_2m,precipitation_probability,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=14&decimal_places=3`
       );
       if (!weatherResponse.data) {
         throw new Error('No data received from weather API');
@@ -77,7 +81,7 @@ export default function Home() {
       
       const searchTerm = searchCity || inputValue;
       const geoResponse = await axios.get(
-        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchTerm)}&count=10&language=en&format=json`
+        `${GEOCODING_API_URL}?name=${encodeURIComponent(searchTerm)}&count=10&language=en&format=json`
       );
 
       if (!geoResponse.data.results?.length) {

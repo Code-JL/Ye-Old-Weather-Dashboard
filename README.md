@@ -33,15 +33,6 @@ npm install
 yarn install
 ```
 
-4. Copy the `.env.example` file to `.env.local`:
-```bash
-cp .env.example .env.local
-```
-
-5. Open `.env.local` and fill in the required environment variables:
-- `NEXT_PUBLIC_OPEN_METEO_API_URL`: The URL for the Open-Meteo API (e.g., "https://api.open-meteo.com/v1/forecast")
-- `NEXT_PUBLIC_GEOCODING_API_URL`: The URL for the geocoding API (e.g., "https://geocoding-api.open-meteo.com/v1/search")
-
 ## Usage
 
 1. Start the development server:
