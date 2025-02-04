@@ -175,14 +175,6 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
               </span>
             </p>
           </section>
-
-          <section className="space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg transition-colors duration-200">
-            <h3 className="font-semibold text-lg mb-3">Weather Analysis</h3>
-            <p className="text-mono-600 dark:text-mono-300 italic">
-              &ldquo;Placeholder for AI-powered weather analysis. This space will contain
-              a detailed explanation of current and upcoming weather patterns.&rdquo;
-            </p>
-          </section>
         </div>
 
         <HourlyForecast data={weather.hourly} />

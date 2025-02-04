@@ -21,9 +21,9 @@ body {
   color: rgb(var(--foreground-rgb));
 }
 
-/* Add more fallback fonts for the title class if you're using it */
+/* Title font class */
 .font-title {
-  font-family: 'JetBrains Mono', monospace, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'PragmaticaLima', serif;
 }
 
 /* Add custom base styles */

@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  assetPrefix: isProd ? '/Ye-Old-Weather-Dashboard/' : '',
+  assetPrefix: isProd ? '/Ye-Old-Weather-Dashboard' : '',
   basePath: isProd ? '/Ye-Old-Weather-Dashboard' : '',
   trailingSlash: true,
 }; 
