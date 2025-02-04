@@ -1,9 +1,19 @@
 'use client';
 
-import { FC } from 'react';
+import { FC, Suspense } from 'react';
 import Link from 'next/link';
 
 const Custom404: FC = () => {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8 flex items-center justify-center">
+      <div className="text-2xl text-mono-800 dark:text-mono-100">Loading...</div>
+    </div>}>
+      <Custom404Content />
+    </Suspense>
+  );
+};
+
+const Custom404Content: FC = () => {
   return (
     <main className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8">
       <div className="max-w-2xl mx-auto text-center">

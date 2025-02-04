@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import axios from 'axios';
 import { WeatherData } from '@/types/weather';
 import WeatherDisplay from './components/WeatherDisplay';
@@ -21,6 +21,16 @@ type CityResult = {
 };
 
 export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8 flex items-center justify-center">
+      <div className="text-2xl text-mono-800 dark:text-mono-100">Loading...</div>
+    </div>}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [inputValue, setInputValue] = useState('');
