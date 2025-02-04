@@ -20,6 +20,22 @@ type CityResult = {
   admin1?: string; // State/Province
 };
 
+function SearchParamsHandler({ onParamsLoaded }: { onParamsLoaded: (city: string, lat: string, lon: string) => void }) {
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    const cityFromUrl = searchParams?.get('city');
+    const latFromUrl = searchParams?.get('lat');
+    const lonFromUrl = searchParams?.get('lon');
+    
+    if (cityFromUrl && latFromUrl && lonFromUrl) {
+      onParamsLoaded(cityFromUrl, latFromUrl, lonFromUrl);
+    }
+  }, [searchParams, onParamsLoaded]);
+
+  return null;
+}
+
 export default function Home() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8 flex items-center justify-center">
@@ -32,7 +48,6 @@ export default function Home() {
 
 function HomeContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [inputValue, setInputValue] = useState('');
   const [city, setCity] = useState('');
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -42,6 +57,12 @@ function HomeContent() {
   const [cityResults, setCityResults] = useState<CityResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const handleParamsLoaded = useCallback((cityFromUrl: string, latFromUrl: string, lonFromUrl: string) => {
+    setCity(cityFromUrl);
+    fetchWeatherData(parseFloat(latFromUrl), parseFloat(lonFromUrl))
+      .finally(() => setInitialLoad(false));
+  }, []);
 
   // Memoize the fetchWeatherData function
   const fetchWeatherData = useCallback(async (lat: number, lon: number) => {
@@ -145,26 +166,9 @@ function HomeContent() {
 
   // Get user's location on component mount
   useEffect(() => {
-    const cityFromUrl = searchParams?.get('city');
-    const latFromUrl = searchParams?.get('lat');
-    const lonFromUrl = searchParams?.get('lon');
-    
-    if (cityFromUrl && latFromUrl && lonFromUrl) {
-      // If we have complete location data in URL, use it directly
-      setCity(cityFromUrl);
-      fetchWeatherData(parseFloat(latFromUrl), parseFloat(lonFromUrl))
-        .finally(() => setInitialLoad(false));
-    } else if (cityFromUrl) {
-      // If only city name is in URL, search for it
-      setCity(cityFromUrl);
-      setInputValue(cityFromUrl);
-      fetchWeather(cityFromUrl)
-        .finally(() => setInitialLoad(false));
-    } else {
-      // Only get location by IP if no parameters in URL
-      getLocationByIP();
-    }
-  }, [searchParams, fetchWeather, fetchWeatherData, getLocationByIP]);
+    // Only get location by IP if no parameters in URL
+    getLocationByIP();
+  }, [getLocationByIP]);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -213,6 +217,9 @@ function HomeContent() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8">
+      <Suspense fallback={null}>
+        <SearchParamsHandler onParamsLoaded={handleParamsLoaded} />
+      </Suspense>
       <div className="max-w-6xl mx-auto">
         <h1 className="text-5xl font-title font-normal text-mono-800 dark:text-mono-100 text-center mb-8">
           Ye Olde Weather Dashboard
