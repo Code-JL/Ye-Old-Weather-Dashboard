@@ -58,12 +58,6 @@ function HomeContent() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const handleParamsLoaded = useCallback((cityFromUrl: string, latFromUrl: string, lonFromUrl: string) => {
-    setCity(cityFromUrl);
-    fetchWeatherData(parseFloat(latFromUrl), parseFloat(lonFromUrl))
-      .finally(() => setInitialLoad(false));
-  }, []);
-
   // Memoize the fetchWeatherData function
   const fetchWeatherData = useCallback(async (lat: number, lon: number) => {
     try {
@@ -83,6 +77,12 @@ function HomeContent() {
       setLoading(false);
     }
   }, []);
+
+  const handleParamsLoaded = useCallback((cityFromUrl: string, latFromUrl: string, lonFromUrl: string) => {
+    setCity(cityFromUrl);
+    fetchWeatherData(parseFloat(latFromUrl), parseFloat(lonFromUrl))
+      .finally(() => setInitialLoad(false));
+  }, [fetchWeatherData]);
 
   // Memoize the selectCity function
   const selectCity = useCallback(async (result: CityResult) => {

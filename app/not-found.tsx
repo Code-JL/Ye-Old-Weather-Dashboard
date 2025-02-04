@@ -1,20 +1,10 @@
 'use client';
 
-import { Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-
-function SearchParamsHandler() {
-  const searchParams = useSearchParams();
-  return null;
-}
 
 export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900">
-      <Suspense fallback={null}>
-        <SearchParamsHandler />
-      </Suspense>
       <div className="text-center">
         <h1 className="text-4xl font-title mb-4">404 - Page Not Found</h1>
         <p className="text-mono-600 dark:text-mono-300">
