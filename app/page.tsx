@@ -85,11 +85,49 @@ function HomeContent() {
     }
   }, []);
 
-  const handleParamsLoaded = useCallback((cityFromUrl: string, latFromUrl: string, lonFromUrl: string) => {
-    setCity(cityFromUrl);
-    fetchWeatherData(parseFloat(latFromUrl), parseFloat(lonFromUrl))
-      .finally(() => setInitialLoad(false));
-  }, [fetchWeatherData]);
+  // Memoize the getLocationByIP function
+  const getLocationByIP = useCallback(async () => {
+    try {
+      // Get location from IP using ipapi.co
+      const response = await axios.get('https://ipapi.co/json/');
+      const { city, latitude, longitude, region: admin1, country_name: country } = response.data;
+      
+      if (city && latitude && longitude) {
+        setCity(city);
+        const urlParams = new URLSearchParams();
+        urlParams.set('city', city);
+        urlParams.set('lat', latitude.toString());
+        urlParams.set('lon', longitude.toString());
+        if (admin1) urlParams.set('admin1', admin1);
+        if (country) urlParams.set('country', country);
+        router.push(`?${urlParams.toString()}`);
+        await fetchWeatherData(latitude, longitude);
+      } else {
+        throw new Error('Location not found');
+      }
+    } catch (error) {
+      console.error('Failed to get location:', error);
+      setError('Failed to get location data');
+    } finally {
+      setInitialLoad(false);
+    }
+  }, [router, fetchWeatherData]);
+
+  // Get user's location on component mount
+  useEffect(() => {
+    const cityFromUrl = searchParams?.get('city');
+    const latFromUrl = searchParams?.get('lat');
+    const lonFromUrl = searchParams?.get('lon');
+    
+    if (cityFromUrl && latFromUrl && lonFromUrl) {
+      setCity(cityFromUrl);
+      fetchWeatherData(parseFloat(latFromUrl), parseFloat(lonFromUrl))
+        .finally(() => setInitialLoad(false));
+    } else {
+      // Only get location by IP if no parameters in URL
+      getLocationByIP();
+    }
+  }, [searchParams, fetchWeatherData, getLocationByIP]);
 
   // Memoize the selectCity function
   const selectCity = useCallback(async (result: CityResult) => {
@@ -142,40 +180,6 @@ function HomeContent() {
       setLoading(false);
     }
   }, [inputValue, selectCity]);
-
-  // Memoize the getLocationByIP function
-  const getLocationByIP = useCallback(async () => {
-    try {
-      // Get location from IP using ipapi.co
-      const response = await axios.get('https://ipapi.co/json/');
-      const { city, latitude, longitude, region: admin1, country_name: country } = response.data;
-      
-      if (city && latitude && longitude) {
-        setCity(city);
-        const urlParams = new URLSearchParams();
-        urlParams.set('city', city);
-        urlParams.set('lat', latitude.toString());
-        urlParams.set('lon', longitude.toString());
-        if (admin1) urlParams.set('admin1', admin1);
-        if (country) urlParams.set('country', country);
-        router.push(`?${urlParams.toString()}`);
-        await fetchWeatherData(latitude, longitude);
-      } else {
-        throw new Error('Location not found');
-      }
-    } catch (error) {
-      console.error('Failed to get location:', error);
-      setError('Failed to get location data');
-    } finally {
-      setInitialLoad(false);
-    }
-  }, [router, fetchWeatherData]);
-
-  // Get user's location on component mount
-  useEffect(() => {
-    // Only get location by IP if no parameters in URL
-    getLocationByIP();
-  }, [getLocationByIP]);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
