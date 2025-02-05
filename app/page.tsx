@@ -20,8 +20,24 @@ type CityResult = {
   admin1?: string; // State/Province
 };
 
-function SearchParamsHandler({ onParamsLoaded }: { onParamsLoaded: (city: string, lat: string, lon: string) => void }) {
+export default function Home() {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <SearchParamsHandler />
+      </Suspense>
+      <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8 flex items-center justify-center">
+        <div className="text-2xl text-mono-800 dark:text-mono-100">Loading...</div>
+      </div>}>
+        <HomeContent />
+      </Suspense>
+    </>
+  );
+}
+
+function SearchParamsHandler() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   
   useEffect(() => {
     const cityFromUrl = searchParams?.get('city');
@@ -29,25 +45,16 @@ function SearchParamsHandler({ onParamsLoaded }: { onParamsLoaded: (city: string
     const lonFromUrl = searchParams?.get('lon');
     
     if (cityFromUrl && latFromUrl && lonFromUrl) {
-      onParamsLoaded(cityFromUrl, latFromUrl, lonFromUrl);
+      router.push(`/?city=${cityFromUrl}&lat=${latFromUrl}&lon=${lonFromUrl}`);
     }
-  }, [searchParams, onParamsLoaded]);
+  }, [searchParams, router]);
 
   return null;
 }
 
-export default function Home() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8 flex items-center justify-center">
-      <div className="text-2xl text-mono-800 dark:text-mono-100">Loading...</div>
-    </div>}>
-      <HomeContent />
-    </Suspense>
-  );
-}
-
 function HomeContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [inputValue, setInputValue] = useState('');
   const [city, setCity] = useState('');
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -217,9 +224,6 @@ function HomeContent() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8">
-      <Suspense fallback={null}>
-        <SearchParamsHandler onParamsLoaded={handleParamsLoaded} />
-      </Suspense>
       <div className="max-w-6xl mx-auto">
         <h1 className="text-5xl font-title font-normal text-mono-800 dark:text-mono-100 text-center mb-8">
           Ye Olde Weather Dashboard
