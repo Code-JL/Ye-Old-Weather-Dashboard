@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   // Disable static optimization for pages that use client-side features
   staticPageGenerationTimeout: 300,
+  // Disable client-side routing for static export
+  skipTrailingSlashRedirect: true,
+  skipMiddlewareUrlNormalize: true,
   // Configure 404 page for static export
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
 }; 
