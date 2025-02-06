@@ -12,8 +12,9 @@ export default function NotFound() {
         <p className="text-mono-600 dark:text-mono-300 mb-6">
           Alas, the page ye seek doth not exist in this realm.
         </p>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a 
-          href="/"
+          href="/Ye-Old-Weather-Dashboard/"
           className="inline-block px-4 py-2 bg-mono-800 text-mono-100 rounded-lg hover:bg-mono-900 
             dark:bg-mono-700 dark:hover:bg-mono-600"
         >
