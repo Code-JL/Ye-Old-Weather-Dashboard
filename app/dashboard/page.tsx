@@ -66,10 +66,10 @@ function DashboardContent() {
   const [showLocationError, setShowLocationError] = useState(false);
 
   // Helper function to format coordinates
-  const formatCoordinate = (coord: number) => Number(coord.toFixed(2));
+  const formatCoordinate = useCallback((coord: number) => Number(coord.toFixed(2)), []);
 
   // Helper function to create URL params in consistent order
-  const createLocationUrlParams = (
+  const createLocationUrlParams = useCallback((
     city: string,
     latitude: number,
     longitude: number,
@@ -83,7 +83,7 @@ function DashboardContent() {
     urlParams.set('lat', formatCoordinate(latitude).toString());
     urlParams.set('lon', formatCoordinate(longitude).toString());
     return urlParams;
-  };
+  }, [formatCoordinate]);
 
   // Memoize the fetchWeatherData function
   const fetchWeatherData = useCallback(async (lat: number, lon: number) => {
@@ -97,8 +97,8 @@ function DashboardContent() {
       }
       setWeather(weatherResponse.data);
       setError('');
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch weather data');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
       setWeather(null);
     } finally {
       setLoading(false);
@@ -115,7 +115,7 @@ function DashboardContent() {
           'Accept': 'application/json',
           'User-Agent': 'Ye Olde Weather Dashboard'
         },
-        validateStatus: (status: number) => true
+        validateStatus: () => true
       };
 
       // 1. Try ip-api.com (fastest and most reliable, 45 req/minute)
@@ -182,13 +182,13 @@ function DashboardContent() {
       
       // If all services failed, throw error
       throw new Error('Location not found');
-    } catch (error) {
+    } catch {
       // Don't log to console, just handle the error gracefully
       setLoading(false);
       setError('');
       setShowLocationError(true);
     }
-  }, [router, fetchWeatherData]);
+  }, [router, fetchWeatherData, createLocationUrlParams]);
 
   // Update handleSearchParamsChange to use state instead of admin1
   const handleSearchParamsChange = useCallback((city: string, lat: number, lon: number, state?: string, country?: string) => {
@@ -222,7 +222,7 @@ function DashboardContent() {
     );
     router.push(`/dashboard?${urlParams.toString()}`);
     await fetchWeatherData(result.latitude, result.longitude);
-  }, [router, fetchWeatherData]);
+  }, [router, fetchWeatherData, createLocationUrlParams]);
 
   // Update fetchWeather to include all dependencies
   const fetchWeather = useCallback(async (searchCity?: string) => {
