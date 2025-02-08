@@ -45,10 +45,10 @@ export default function DailyForecast({ data }: DailyForecastProps) {
           return (
             <div
               key={date}
-              className="flex items-center justify-between bg-mono-100 dark:bg-mono-700 rounded-lg p-4"
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-mono-100 dark:bg-mono-700 rounded-lg p-4 space-y-2 sm:space-y-0"
             >
-              <div className="flex items-center space-x-4">
-                <div className="w-32">
+              <div className="flex items-center space-x-4 w-full sm:w-auto">
+                <div className="w-24 sm:w-32">
                   <div className="flex flex-col">
                     <span className="text-mono-800 dark:text-mono-100 font-medium">
                       {dayName}
@@ -58,13 +58,13 @@ export default function DailyForecast({ data }: DailyForecastProps) {
                     </span>
                   </div>
                 </div>
-                <div className="text-center w-32">
+                <div className="text-center flex-1 sm:w-32 sm:flex-none">
                   <span className="text-xs text-mono-600 dark:text-mono-400">
                     {WEATHER_DESCRIPTIONS[weatherCode]}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto sm:space-x-6">
                 <div className="flex items-center space-x-2">
                   <PrecipitationIcon 
                     weatherCode={weatherCode} 
@@ -72,7 +72,7 @@ export default function DailyForecast({ data }: DailyForecastProps) {
                   />
                   <span className="text-mono-600 dark:text-mono-400">{precipProb}%</span>
                 </div>
-                <div className="flex items-center space-x-3 w-24">
+                <div className="flex items-center space-x-3 w-20 sm:w-24 justify-end">
                   <span className="text-mono-800 dark:text-mono-100">
                     {Math.round(maxTemp)}°
                   </span>

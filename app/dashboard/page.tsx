@@ -305,7 +305,7 @@ function DashboardContent() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[2000px] mx-auto">
         <h1 className="text-5xl font-title font-normal text-mono-800 dark:text-mono-100 text-center mb-8">
           Ye Olde Weather Dashboard
         </h1>
