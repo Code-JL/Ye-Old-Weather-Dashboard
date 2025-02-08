@@ -2,20 +2,13 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import type { UnitSettings } from '@/types/settings';
+import { DEFAULT_SETTINGS } from '@/types/settings';
 
 type SettingsContextType = {
   settings: UnitSettings;
   updateSettings: (newSettings: Partial<UnitSettings>) => void;
   resetSettings: () => void;
   isLoading: boolean;
-};
-
-const defaultSettings: UnitSettings = {
-  temperature: 'C',
-  windSpeed: 'kmh',
-  humidity: 'percent',
-  precipitation: 'mm',
-  precision: '2'
 };
 
 const STORAGE_KEY = 'weatherSettings';
@@ -42,7 +35,7 @@ function isValidSettings(data: unknown): data is UnitSettings {
 }
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<UnitSettings>(defaultSettings);
+  const [settings, setSettings] = useState<UnitSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load settings from localStorage
@@ -94,8 +87,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   // Memoize the reset function
   const resetSettings = useCallback(() => {
     try {
-      setSettings(defaultSettings);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSettings));
+      setSettings(DEFAULT_SETTINGS);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SETTINGS));
     } catch (error) {
       console.error('Failed to reset settings:', error);
     }

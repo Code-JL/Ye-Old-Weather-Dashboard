@@ -40,7 +40,7 @@ export const DEFAULT_SETTINGS: Readonly<UnitSettings> = {
   windSpeed: 'kmh',
   humidity: 'percent',
   precipitation: 'mm',
-  precision: '2'
+  precision: '1'
 } as const;
 
 /**

@@ -6,6 +6,7 @@ import { WeatherData } from '@/types/weather';
 import WeatherDisplay from '../components/WeatherDisplay';
 import debounce from 'lodash/debounce';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Toast from '../components/Toast';
 
 // API URLs
 const OPEN_METEO_API_URL = 'https://api.open-meteo.com/v1/forecast';
@@ -32,18 +33,18 @@ export default function Dashboard() {
   );
 }
 
-function SearchParamsHandler({ onSearchParamsChange }: { onSearchParamsChange: (city: string, lat: number, lon: number, admin1?: string, country?: string) => void }) {
+function SearchParamsHandler({ onSearchParamsChange }: { onSearchParamsChange: (city: string, lat: number, lon: number, state?: string, country?: string) => void }) {
   const searchParams = useSearchParams();
 
   useEffect(() => {
     const cityFromUrl = searchParams?.get('city');
     const latFromUrl = searchParams?.get('lat');
     const lonFromUrl = searchParams?.get('lon');
-    const admin1FromUrl = searchParams?.get('admin1') ?? undefined;
+    const stateFromUrl = searchParams?.get('state') ?? undefined;
     const countryFromUrl = searchParams?.get('country') ?? undefined;
     
     if (cityFromUrl && latFromUrl && lonFromUrl) {
-      onSearchParamsChange(cityFromUrl, parseFloat(latFromUrl), parseFloat(lonFromUrl), admin1FromUrl, countryFromUrl);
+      onSearchParamsChange(cityFromUrl, parseFloat(latFromUrl), parseFloat(lonFromUrl), stateFromUrl, countryFromUrl);
     }
   }, [searchParams, onSearchParamsChange]);
 
@@ -62,6 +63,27 @@ function DashboardContent() {
   const [cityResults, setCityResults] = useState<CityResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showLocationError, setShowLocationError] = useState(false);
+
+  // Helper function to format coordinates
+  const formatCoordinate = (coord: number) => Number(coord.toFixed(2));
+
+  // Helper function to create URL params in consistent order
+  const createLocationUrlParams = (
+    city: string,
+    latitude: number,
+    longitude: number,
+    state?: string,
+    country?: string
+  ) => {
+    const urlParams = new URLSearchParams();
+    urlParams.set('city', city);
+    if (state) urlParams.set('state', state);
+    if (country) urlParams.set('country', country);
+    urlParams.set('lat', formatCoordinate(latitude).toString());
+    urlParams.set('lon', formatCoordinate(longitude).toString());
+    return urlParams;
+  };
 
   // Memoize the fetchWeatherData function
   const fetchWeatherData = useCallback(async (lat: number, lon: number) => {
@@ -83,36 +105,95 @@ function DashboardContent() {
     }
   }, []);
 
-  // Memoize the getLocationByIP function
+  // Update getLocationByIP to use new helper
   const getLocationByIP = useCallback(async () => {
     try {
-      // Get location from IP using ipapi.co
-      const response = await axios.get('https://ipapi.co/json/');
-      const { city, latitude, longitude, region: admin1, country_name: country } = response.data;
+      // Common axios config
+      const axiosConfig = {
+        timeout: 5000,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Ye Olde Weather Dashboard'
+        },
+        validateStatus: (status: number) => true
+      };
+
+      // 1. Try ip-api.com (fastest and most reliable, 45 req/minute)
+      const ipApiResponse = await axios.get('https://ip-api.com/json/', axiosConfig);
       
-      if (city && latitude && longitude) {
-        setCity(city);
-        const urlParams = new URLSearchParams();
-        urlParams.set('city', city);
-        urlParams.set('lat', latitude.toString());
-        urlParams.set('lon', longitude.toString());
-        if (admin1) urlParams.set('admin1', admin1);
-        if (country) urlParams.set('country', country);
-        router.push(`/dashboard?${urlParams.toString()}`);
-        await fetchWeatherData(latitude, longitude);
-      } else {
-        throw new Error('Location not found');
+      if (ipApiResponse.data && ipApiResponse.status < 400 && ipApiResponse.data.status === 'success') {
+        const { city, lat: latitude, lon: longitude, regionName: state, country } = ipApiResponse.data;
+        
+        if (city && latitude && longitude) {
+          setCity(city);
+          const urlParams = createLocationUrlParams(city, latitude, longitude, state, country);
+          router.push(`/dashboard?${urlParams.toString()}`);
+          await fetchWeatherData(latitude, longitude);
+          return;
+        }
       }
+
+      // 2. Try ipwho.is (good reliability, no rate limit specified)
+      const ipwhoisResponse = await axios.get('https://ipwho.is/', axiosConfig);
+      
+      if (ipwhoisResponse.data && ipwhoisResponse.status < 400 && ipwhoisResponse.data.success) {
+        const { city, latitude, longitude, region: state, country } = ipwhoisResponse.data;
+        
+        if (city && latitude && longitude) {
+          setCity(city);
+          const urlParams = createLocationUrlParams(city, latitude, longitude, state, country);
+          router.push(`/dashboard?${urlParams.toString()}`);
+          await fetchWeatherData(latitude, longitude);
+          return;
+        }
+      }
+
+      // 3. Try ipinfo.io (reliable but stricter rate limit)
+      const ipinfoResponse = await axios.get('https://ipinfo.io/json', axiosConfig);
+      
+      if (ipinfoResponse.data && ipinfoResponse.status < 400) {
+        const { city, loc, region: state, country } = ipinfoResponse.data;
+        // ipinfo returns location as "lat,lon" string
+        const [latitude, longitude] = loc.split(',').map(Number);
+        
+        if (city && latitude && longitude) {
+          setCity(city);
+          const urlParams = createLocationUrlParams(city, latitude, longitude, state, country);
+          router.push(`/dashboard?${urlParams.toString()}`);
+          await fetchWeatherData(latitude, longitude);
+          return;
+        }
+      }
+
+      // 4. Try ipapi.co (last resort due to strict rate limiting)
+      const ipapiResponse = await axios.get('https://ipapi.co/json/', axiosConfig);
+      
+      if (ipapiResponse.data && ipapiResponse.status < 400) {
+        const { city, latitude, longitude, region: state, country_name: country } = ipapiResponse.data;
+        
+        if (city && latitude && longitude) {
+          setCity(city);
+          const urlParams = createLocationUrlParams(city, latitude, longitude, state, country);
+          router.push(`/dashboard?${urlParams.toString()}`);
+          await fetchWeatherData(latitude, longitude);
+          return;
+        }
+      }
+      
+      // If all services failed, throw error
+      throw new Error('Location not found');
     } catch (error) {
-      console.error('Failed to get location:', error);
-      setError('Failed to get location data');
+      // Don't log to console, just handle the error gracefully
+      setLoading(false);
+      setError('');
+      setShowLocationError(true);
     }
   }, [router, fetchWeatherData]);
 
-  // Handle search params change
-  const handleSearchParamsChange = useCallback((city: string, lat: number, lon: number, admin1?: string, country?: string) => {
+  // Update handleSearchParamsChange to use state instead of admin1
+  const handleSearchParamsChange = useCallback((city: string, lat: number, lon: number, state?: string, country?: string) => {
     setCity(city);
-    setAdmin1(admin1 || '');
+    setAdmin1(state || '');
     setCountry(country || '');
     fetchWeatherData(lat, lon);
   }, [fetchWeatherData]);
@@ -122,7 +203,7 @@ function DashboardContent() {
     getLocationByIP();
   }, [getLocationByIP]);
 
-  // Memoize the selectCity function
+  // Update selectCity to use new helper
   const selectCity = useCallback(async (result: CityResult) => {
     setCity(result.name);
     setAdmin1(result.admin1 || '');
@@ -132,12 +213,13 @@ function DashboardContent() {
     setShowSuggestions(false);
     setSelectedIndex(-1);
     
-    const urlParams = new URLSearchParams();
-    urlParams.set('city', result.name);
-    urlParams.set('lat', result.latitude.toString());
-    urlParams.set('lon', result.longitude.toString());
-    if (result.admin1) urlParams.set('admin1', result.admin1);
-    if (result.country) urlParams.set('country', result.country);
+    const urlParams = createLocationUrlParams(
+      result.name,
+      result.latitude,
+      result.longitude,
+      result.admin1,
+      result.country
+    );
     router.push(`/dashboard?${urlParams.toString()}`);
     await fetchWeatherData(result.latitude, result.longitude);
   }, [router, fetchWeatherData]);
@@ -229,13 +311,13 @@ function DashboardContent() {
         </h1>
         
         <div className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-            <div className="flex-1 text-center">
-              <h2 className="text-2xl font-semibold text-mono-800 dark:text-mono-100">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+            <div className="w-full sm:w-auto text-center sm:text-left">
+              <h2 className="text-2xl font-semibold text-mono-800 dark:text-mono-100 truncate">
                 {city ? `${city}${admin1 ? `, ${admin1}` : ''}${country ? `, ${country}` : ''}` : 'Select a location'}
               </h2>
             </div>
-            <div className="flex gap-2 w-full sm:w-1/3 relative">
+            <div className="flex gap-2 w-full sm:w-1/3 relative min-w-0">
               <input
                 type="text"
                 value={inputValue}
@@ -264,7 +346,7 @@ function DashboardContent() {
                   }, 300);
                 }}
                 placeholder={city || "Enter city name"}
-                className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-800 text-sm 
+                className="flex-1 min-w-0 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-800 text-sm 
                   text-mono-900 dark:text-mono-100 dark:bg-mono-700 
                   placeholder:text-mono-400 dark:placeholder:text-mono-500
                   transition-colors duration-200"
@@ -281,10 +363,29 @@ function DashboardContent() {
                 className="px-4 py-2 bg-mono-800 text-mono-100 rounded-lg hover:bg-mono-900 
                   disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap 
                   dark:bg-mono-700 dark:hover:bg-mono-600 dark:text-mono-100
-                  transition-colors duration-200"
+                  transition-colors duration-200 w-[80px] flex items-center justify-center"
                 aria-label={loading ? 'Loading weather data' : 'Search for weather'}
               >
-                {loading ? 'Loading...' : 'Search'}
+                {loading ? (
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle 
+                      className="opacity-25" 
+                      cx="12" 
+                      cy="12" 
+                      r="10" 
+                      stroke="currentColor" 
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path 
+                      className="opacity-75" 
+                      fill="currentColor" 
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                ) : (
+                  'Search'
+                )}
               </button>
               
               {showSuggestions && cityResults.length > 0 && (
@@ -331,6 +432,13 @@ function DashboardContent() {
             </div>
           )}
         </div>
+        
+        {showLocationError && (
+          <Toast 
+            message="Unable to detect your location. Please use the search box to find your city."
+            onClose={() => setShowLocationError(false)}
+          />
+        )}
       </div>
     </main>
   );
