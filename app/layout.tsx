@@ -1,7 +1,9 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { JetBrains_Mono } from 'next/font/google'
-import Navigation from './components/Navigation'
+import Navigation from './components/Navigation';
+import { ThemeProvider } from 'next-themes';
+import { SettingsProvider } from './contexts/SettingsContext';
 
 const jetbrains = JetBrains_Mono({ 
   subsets: ['latin'],
@@ -10,7 +12,7 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: 'Ye Olde Weather Dashboard',
-  description: 'A medieval-themed weather dashboard',
+  description: 'A medieval-themed weather dashboard built with Next.js',
 }
 
 export default function RootLayout({
@@ -21,7 +23,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${jetbrains.variable} font-mono dark:bg-mono-900 dark:text-mono-100`}>
-        <Navigation>{children}</Navigation>
+        <ThemeProvider attribute="class">
+          <SettingsProvider>
+            <Navigation />
+            {children}
+          </SettingsProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -5,80 +5,65 @@ import { SettingsProvider } from '../contexts/SettingsContext';
 import ThemeToggle from './ThemeToggle';
 import LocationButton from './LocationButton';
 import SettingsDropdown from './SettingsDropdown';
-import { ErrorBoundary } from 'react-error-boundary';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useCallback, Suspense } from 'react';
+import Link from 'next/link';
 
-export default function Navigation({ children }: { children: React.ReactNode }) {
+function SearchParamsHandler({ onSearchParamsChange }: { onSearchParamsChange: () => void }) {
   const searchParams = useSearchParams();
-  const city = searchParams?.get('city');
-  const admin1 = searchParams?.get('admin1');
-  const country = searchParams?.get('country');
-  const [currentDate, setCurrentDate] = useState('');
 
   useEffect(() => {
-    const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-    setCurrentDate(formattedDate);
+    const cityFromUrl = searchParams?.get('city');
+    const latFromUrl = searchParams?.get('lat');
+    const lonFromUrl = searchParams?.get('lon');
+    
+    if (cityFromUrl && latFromUrl && lonFromUrl) {
+      onSearchParamsChange();
+    }
+  }, [searchParams, onSearchParamsChange]);
+
+  return null;
+}
+
+export default function Navigation() {
+  const handleSearchParamsChange = useCallback(() => {
+    // Handle the search params change here if needed
   }, []);
-
-  const getLocationString = () => {
-    if (!city) return '';
-    const parts = [decodeURIComponent(city)];
-    if (admin1) parts.push(decodeURIComponent(admin1));
-    if (country) parts.push(decodeURIComponent(country));
-    return parts.join(', ');
-  };
-
-  const locationString = getLocationString();
 
   return (
     <ThemeProvider attribute="class">
       <SettingsProvider>
-        <nav className="bg-white dark:bg-mono-800 shadow-lg">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16 items-center">
-              <div className="flex items-center space-x-4">
-                <span className="text-xl font-title font-semibold">
-                  Ye Olde Weather
-                </span>
-                {currentDate && (
-                  <span className="text-sm text-mono-600 dark:text-mono-400 hidden md:inline">
-                    • {currentDate}
-                  </span>
-                )}
-                {locationString && (
-                  <span 
-                    className="text-sm text-mono-600 dark:text-mono-400 hidden sm:inline truncate max-w-md" 
-                    title={locationString}
+        <nav className="bg-white dark:bg-mono-800 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              <div className="flex">
+                <div className="flex-shrink-0 flex items-center">
+                  <Link href="/">
+                    <span className="text-xl font-title text-mono-800 dark:text-mono-100">
+                      Ye Olde Weather
+                    </span>
+                  </Link>
+                </div>
+                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                  <Link
+                    href="/"
+                    className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium border-transparent text-mono-500 hover:border-mono-300 hover:text-mono-700 dark:text-mono-400 dark:hover:text-mono-300"
                   >
-                    • {locationString}
-                  </span>
-                )}
+                    Dashboard
+                  </Link>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="hidden sm:ml-6 sm:flex sm:items-center">
+                <Suspense fallback={<div>Loading search params...</div>}>
+                  <SearchParamsHandler onSearchParamsChange={handleSearchParamsChange} />
+                </Suspense>
                 <LocationButton />
+                <SettingsDropdown />
                 <ThemeToggle />
-                <ErrorBoundary fallback={
-                  <button 
-                    onClick={() => window.location.reload()} 
-                    className="p-2 rounded-lg bg-red-200 dark:bg-red-800"
-                  >
-                    Reset Settings
-                  </button>
-                }>
-                  <SettingsDropdown />
-                </ErrorBoundary>
               </div>
             </div>
           </div>
         </nav>
-        {children}
       </SettingsProvider>
     </ThemeProvider>
   );

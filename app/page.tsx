@@ -22,45 +22,39 @@ type CityResult = {
 
 export default function Home() {
   return (
-    <>
-      <Suspense fallback={null}>
-        <SearchParamsHandler />
-      </Suspense>
-      <Suspense fallback={<div className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8 flex items-center justify-center">
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8 flex items-center justify-center">
         <div className="text-2xl text-mono-800 dark:text-mono-100">Loading...</div>
-      </div>}>
-        <HomeContent />
-      </Suspense>
-    </>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
 
-function SearchParamsHandler() {
+function SearchParamsHandler({ onSearchParamsChange }: { onSearchParamsChange: (city: string, lat: number, lon: number) => void }) {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  
+
   useEffect(() => {
     const cityFromUrl = searchParams?.get('city');
     const latFromUrl = searchParams?.get('lat');
     const lonFromUrl = searchParams?.get('lon');
     
     if (cityFromUrl && latFromUrl && lonFromUrl) {
-      router.push(`/?city=${cityFromUrl}&lat=${latFromUrl}&lon=${lonFromUrl}`);
+      onSearchParamsChange(cityFromUrl, parseFloat(latFromUrl), parseFloat(lonFromUrl));
     }
-  }, [searchParams, router]);
+  }, [searchParams, onSearchParamsChange]);
 
   return null;
 }
 
 function HomeContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [inputValue, setInputValue] = useState('');
   const [city, setCity] = useState('');
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
   const [cityResults, setCityResults] = useState<CityResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -108,26 +102,19 @@ function HomeContent() {
     } catch (error) {
       console.error('Failed to get location:', error);
       setError('Failed to get location data');
-    } finally {
-      setInitialLoad(false);
     }
   }, [router, fetchWeatherData]);
 
+  // Handle search params change
+  const handleSearchParamsChange = useCallback((city: string, lat: number, lon: number) => {
+    setCity(city);
+    fetchWeatherData(lat, lon);
+  }, [fetchWeatherData]);
+
   // Get user's location on component mount
   useEffect(() => {
-    const cityFromUrl = searchParams?.get('city');
-    const latFromUrl = searchParams?.get('lat');
-    const lonFromUrl = searchParams?.get('lon');
-    
-    if (cityFromUrl && latFromUrl && lonFromUrl) {
-      setCity(cityFromUrl);
-      fetchWeatherData(parseFloat(latFromUrl), parseFloat(lonFromUrl))
-        .finally(() => setInitialLoad(false));
-    } else {
-      // Only get location by IP if no parameters in URL
-      getLocationByIP();
-    }
-  }, [searchParams, fetchWeatherData, getLocationByIP]);
+    getLocationByIP();
+  }, [getLocationByIP]);
 
   // Memoize the selectCity function
   const selectCity = useCallback(async (result: CityResult) => {
@@ -315,30 +302,24 @@ function HomeContent() {
                       id={`search-option-${index}`}
                     >
                       {result.name}
-                      {result.admin1 && `, ${result.admin1}`}
-                      {result.country && ` (${result.country})`}
                     </button>
                   ))}
                 </div>
               )}
             </div>
           </div>
-
-          {error && (
-            <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded-lg text-center" role="alert">
-              {error}
-            </div>
-          )}
-
-          {initialLoad ? (
-            <div className="mt-4 text-mono-600 dark:text-mono-400 text-center animate-pulse">
-              Loading your local weather...
-            </div>
-          ) : weather ? (
+          
+          <Suspense fallback={<div>Loading search params...</div>}>
+            <SearchParamsHandler onSearchParamsChange={handleSearchParamsChange} />
+          </Suspense>
+          
+          {weather && (
             <WeatherDisplay weather={weather} />
-          ) : !error && (
-            <div className="mt-4 text-mono-600 dark:text-mono-400 text-center">
-              Enter a city name to see the weather
+          )}
+          
+          {error && (
+            <div className="mt-4 text-red-500">
+              {error}
             </div>
           )}
         </div>
