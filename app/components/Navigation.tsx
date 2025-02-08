@@ -46,14 +46,14 @@ export default function Navigation() {
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                   <Link
-                    href="/"
+                    href="/dashboard"
                     className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium border-transparent text-mono-500 hover:border-mono-300 hover:text-mono-700 dark:text-mono-400 dark:hover:text-mono-300"
                   >
                     Dashboard
                   </Link>
                 </div>
               </div>
-              <div className="hidden sm:ml-6 sm:flex sm:items-center">
+              <div className="hidden sm:ml-6 sm:flex sm:items-center gap-2">
                 <Suspense fallback={<div>Loading search params...</div>}>
                   <SearchParamsHandler onSearchParamsChange={handleSearchParamsChange} />
                 </Suspense>

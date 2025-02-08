@@ -75,11 +75,11 @@ export default function SettingsDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg bg-mono-200 dark:bg-mono-700 transition active:scale-95"
+        className="p-2 rounded-lg bg-mono-200 dark:bg-mono-700 active:scale-95"
         aria-label="Settings"
       >
         <svg 
-          className="w-5 h-5" 
+          className="w-5 h-5 text-mono-800 dark:text-mono-100" 
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24"
@@ -118,7 +118,7 @@ export default function SettingsDropdown() {
                 <select
                   value={settings.temperature}
                   onChange={(e) => updateSettings({ ...settings, temperature: e.target.value as UnitSettings['temperature'] })}
-                  className="w-full bg-mono-50 dark:bg-mono-700 rounded p-1 text-sm transition-colors hover:bg-mono-100 dark:hover:bg-mono-600"
+                  className="w-full bg-mono-50 dark:bg-mono-700 rounded p-1 text-sm hover:bg-mono-100 dark:hover:bg-mono-600 text-mono-900 dark:text-mono-100"
                 >
                   {temperatureUnits.map(unit => (
                     <option key={unit.value} value={unit.value}>{unit.label}</option>
@@ -135,7 +135,7 @@ export default function SettingsDropdown() {
                 <select
                   value={settings.windSpeed}
                   onChange={(e) => updateSettings({ ...settings, windSpeed: e.target.value as UnitSettings['windSpeed'] })}
-                  className="w-full bg-mono-50 dark:bg-mono-700 rounded p-1 text-sm transition-colors hover:bg-mono-100 dark:hover:bg-mono-600"
+                  className="w-full bg-mono-50 dark:bg-mono-700 rounded p-1 text-sm hover:bg-mono-100 dark:hover:bg-mono-600 text-mono-900 dark:text-mono-100"
                 >
                   {windSpeedUnits.map(unit => (
                     <option key={unit.value} value={unit.value}>{unit.label}</option>
@@ -152,7 +152,7 @@ export default function SettingsDropdown() {
                 <select
                   value={settings.humidity}
                   onChange={(e) => updateSettings({ ...settings, humidity: e.target.value as UnitSettings['humidity'] })}
-                  className="w-full bg-mono-50 dark:bg-mono-700 rounded p-1 text-sm transition-colors hover:bg-mono-100 dark:hover:bg-mono-600"
+                  className="w-full bg-mono-50 dark:bg-mono-700 rounded p-1 text-sm hover:bg-mono-100 dark:hover:bg-mono-600 text-mono-900 dark:text-mono-100"
                 >
                   {humidityUnits.map(unit => (
                     <option key={unit.value} value={unit.value}>{unit.label}</option>
@@ -169,7 +169,7 @@ export default function SettingsDropdown() {
                 <select
                   value={settings.precipitation}
                   onChange={(e) => updateSettings({ ...settings, precipitation: e.target.value as UnitSettings['precipitation'] })}
-                  className="w-full bg-mono-50 dark:bg-mono-700 rounded p-1 text-sm transition-colors hover:bg-mono-100 dark:hover:bg-mono-600"
+                  className="w-full bg-mono-50 dark:bg-mono-700 rounded p-1 text-sm hover:bg-mono-100 dark:hover:bg-mono-600 text-mono-900 dark:text-mono-100"
                 >
                   {precipitationUnits.map(unit => (
                     <option key={unit.value} value={unit.value}>{unit.label}</option>
@@ -186,7 +186,7 @@ export default function SettingsDropdown() {
                 <select
                   value={settings.precision}
                   onChange={(e) => updateSettings({ ...settings, precision: e.target.value as UnitSettings['precision'] })}
-                  className="w-full bg-mono-50 dark:bg-mono-700 rounded p-1 text-sm transition-colors hover:bg-mono-100 dark:hover:bg-mono-600"
+                  className="w-full bg-mono-50 dark:bg-mono-700 rounded p-1 text-sm hover:bg-mono-100 dark:hover:bg-mono-600 text-mono-900 dark:text-mono-100"
                 >
                   {precisionOptions.map(option => (
                     <option key={option.value} value={option.value}>{option.label}</option>
