@@ -15,4 +15,21 @@ applications:
       cache:
         paths:
           - node_modules/**/*
-          - .next/cache/**/* 
+          - .next/cache/**/*
+          - .next/server/**/*
+          - .next/static/**/*
+          - public/**/*
+      customHeaders:
+        - pattern: '**/*'
+          headers:
+            - key: 'Strict-Transport-Security'
+              value: 'max-age=31536000; includeSubDomains'
+            - key: 'X-Frame-Options'
+              value: 'SAMEORIGIN'
+            - key: 'X-XSS-Protection'
+              value: '1; mode=block'
+      environment:
+        variables:
+          AMPLIFY_SKIP_BACKEND_GENERATION: true
+          AMPLIFY_SKIP_API_GENERATION: true
+          AMPLIFY_SKIP_PARAMETER_STORE: true 
