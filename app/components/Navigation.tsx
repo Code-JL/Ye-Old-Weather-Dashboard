@@ -26,6 +26,7 @@ function SearchParamsHandler({ onSearchParamsChange }: { onSearchParamsChange: (
 }
 
 export default function Navigation() {
+  const searchParams = useSearchParams();
   const handleSearchParamsChange = useCallback(() => {
     // Handle the search params change here if needed
   }, []);
@@ -46,10 +47,16 @@ export default function Navigation() {
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                   <Link
-                    href="/dashboard"
+                    href={`/dashboard${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`}
                     className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium border-transparent text-mono-500 hover:border-mono-300 hover:text-mono-700 dark:text-mono-400 dark:hover:text-mono-300"
                   >
                     Dashboard
+                  </Link>
+                  <Link
+                    href={`/history${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`}
+                    className="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium border-transparent text-mono-500 hover:border-mono-300 hover:text-mono-700 dark:text-mono-400 dark:hover:text-mono-300"
+                  >
+                    History
                   </Link>
                 </div>
               </div>

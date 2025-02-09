@@ -84,6 +84,28 @@ export const WEATHER_DESCRIPTIONS: Readonly<Record<WeatherCode, string>> = {
 } as const;
 
 /**
+ * Represents historical daily weather data
+ */
+export interface HistoricalDailyWeather {
+  /** Array of ISO dates for each day */
+  time: string[];
+  /** Maximum temperature at 2 meters above ground for each day */
+  temperature_2m_max: number[];
+  /** Minimum temperature at 2 meters above ground for each day */
+  temperature_2m_min: number[];
+  /** Total precipitation sum for each day */
+  precipitation_sum: number[];
+}
+
+/**
+ * Represents historical weather data
+ */
+export interface HistoricalWeather {
+  /** Daily historical weather data */
+  daily: HistoricalDailyWeather;
+}
+
+/**
  * Represents the current weather measurements
  */
 export interface CurrentWeather {
@@ -129,6 +151,8 @@ export interface DailyForecast {
   weathercode: WeatherCode[];
   /** Precipitation probability max for each day */
   precipitation_probability_max: number[];
+  /** Total precipitation sum for each day */
+  precipitation_sum: number[];
 }
 
 /**
@@ -141,6 +165,8 @@ export interface WeatherData {
   hourly: HourlyForecast;
   /** Daily forecast data */
   daily: DailyForecast;
+  /** Historical weather data */
+  historical?: HistoricalWeather;
 }
 
 /**
