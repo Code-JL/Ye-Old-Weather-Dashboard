@@ -68,7 +68,7 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
   const hasMoreHours = visibleHours < data.time.length;
 
   return (
-    <section className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6 mb-6">
+    <div>
       <h2 className="text-2xl font-semibold text-mono-800 dark:text-mono-100 mb-4">
         Hourly Forecast
       </h2>
@@ -80,7 +80,7 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
               <div key={time} className="relative">
                 <div className="flex gap-4">
                   {dayHeader && (
-                    <div className="flex flex-col items-center justify-center bg-mono-100 dark:bg-mono-700 rounded-lg p-3 min-w-[100px]">
+                    <div className="flex flex-col items-center justify-center bg-mono-100 dark:bg-mono-700 rounded-lg p-3 min-w-[100px] border border-mono-200 dark:border-mono-600">
                       <div className="flex flex-col items-center gap-0.5">
                         <span className="text-mono-600 dark:text-mono-300 text-sm font-semibold">
                           {dayHeader.isToday ? 'Today' : dayHeader.dayName}
@@ -92,7 +92,7 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
                     </div>
                   )}
                   <div
-                    className={`flex flex-col items-center bg-mono-100 dark:bg-mono-700 rounded-lg p-3 min-w-[100px]`}
+                    className={`flex flex-col items-center bg-mono-100 dark:bg-mono-700 rounded-lg p-3 min-w-[100px] border border-mono-200 dark:border-mono-600`}
                   >
                     <div className="flex flex-col items-center gap-0.5">
                       <span className={`text-mono-600 dark:text-mono-300 text-sm
@@ -127,7 +127,7 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
             {hasMoreHours && (
               <button
                 onClick={handleLoadMore}
-                className="flex flex-col items-center justify-center bg-mono-100 dark:bg-mono-700 rounded-lg p-3 min-w-[100px] hover:bg-mono-200 dark:hover:bg-mono-600 transition-colors"
+                className="flex flex-col items-center justify-center bg-mono-100 dark:bg-mono-700 rounded-lg p-3 min-w-[100px] hover:bg-mono-200 dark:hover:bg-mono-600 transition-colors border border-mono-200 dark:border-mono-600"
               >
                 <div className="flex flex-col items-center gap-0.5">
                   <span className="text-mono-600 dark:text-mono-300 text-sm">
@@ -153,13 +153,13 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
         {hourlyData.map(({ time, hour, temp, precipProb, weatherCode, isNewDay, date, dayHeader }) => (
           <div key={time}>
             {dayHeader && (
-              <div className="py-2 px-4 bg-mono-50 dark:bg-mono-700 rounded-lg mb-2">
+              <div className="py-2 px-4 bg-mono-50 dark:bg-mono-700 rounded-lg mb-2 border border-mono-200 dark:border-mono-600">
                 <span className="text-sm font-medium text-mono-700 dark:text-mono-200">
                   {dayHeader.isToday ? 'Today' : dayHeader.dayName} {dayHeader.date}
                 </span>
               </div>
             )}
-            <div className="flex items-center justify-between bg-mono-100 dark:bg-mono-700 rounded-lg p-4">
+            <div className="flex items-center justify-between bg-mono-100 dark:bg-mono-700 rounded-lg p-4 border border-mono-200 dark:border-mono-600">
               <div className="flex items-center space-x-4">
                 <div>
                   <span className={`text-mono-600 dark:text-mono-300 text-sm
@@ -194,7 +194,7 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
         {hasMoreHours && (
           <button
             onClick={handleLoadMore}
-            className="w-full flex items-center justify-between bg-mono-100 dark:bg-mono-700 rounded-lg p-4 hover:bg-mono-200 dark:hover:bg-mono-600 transition-colors"
+            className="w-full flex items-center justify-between bg-mono-100 dark:bg-mono-700 rounded-lg p-4 hover:bg-mono-200 dark:hover:bg-mono-600 transition-colors border border-mono-200 dark:border-mono-600"
           >
             <div className="flex items-center space-x-4">
               <div>
@@ -208,6 +208,6 @@ export default function HourlyForecast({ data }: HourlyForecastProps) {
           </button>
         )}
       </div>
-    </section>
+    </div>
   );
 } 

@@ -27,7 +27,7 @@ export default function DailyForecast({ data }: DailyForecastProps) {
   }, []);
 
   return (
-    <section className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6 mb-6">
+    <div>
       <h2 className="text-2xl font-semibold text-mono-800 dark:text-mono-100 mb-4">
         6-Day Forecast
       </h2>
@@ -45,7 +45,7 @@ export default function DailyForecast({ data }: DailyForecastProps) {
           return (
             <div
               key={date}
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-mono-100 dark:bg-mono-700 rounded-lg p-4 space-y-2 sm:space-y-0"
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-mono-100 dark:bg-mono-700 rounded-lg p-4 space-y-2 sm:space-y-0 border border-mono-200 dark:border-mono-600 hover:bg-mono-200 dark:hover:bg-mono-600 transition-colors"
             >
               <div className="flex items-center space-x-4 w-full sm:w-auto">
                 <div className="w-24 sm:w-32">
@@ -85,6 +85,6 @@ export default function DailyForecast({ data }: DailyForecastProps) {
           );
         })}
       </div>
-    </section>
+    </div>
   );
 } 

@@ -8,6 +8,7 @@ import SettingsDropdown from './SettingsDropdown';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
+import MobileMenu from './MobileMenu';
 
 function SearchParamsHandler({ onSearchParamsChange }: { onSearchParamsChange: () => void }) {
   const searchParams = useSearchParams();
@@ -68,6 +69,7 @@ export default function Navigation() {
                 <SettingsDropdown />
                 <ThemeToggle />
               </div>
+              <MobileMenu />
             </div>
           </div>
         </nav>

@@ -313,8 +313,20 @@ function DashboardContent() {
         <div className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
             <div className="w-full sm:w-auto text-center sm:text-left">
-              <h2 className="text-2xl font-semibold text-mono-800 dark:text-mono-100 truncate">
-                {city ? `${city}${admin1 ? `, ${admin1}` : ''}${country ? `, ${country}` : ''}` : 'Select a location'}
+              <h2 className="text-2xl font-semibold text-mono-800 dark:text-mono-100">
+                <span className="block sm:inline">{city}</span>
+                {admin1 && (
+                  <>
+                    <span className="hidden sm:inline">, </span>
+                    <span className="block sm:inline">{admin1}</span>
+                  </>
+                )}
+                {country && (
+                  <>
+                    <span className="hidden sm:inline">, </span>
+                    <span className="block sm:inline">{country}</span>
+                  </>
+                )}
               </h2>
             </div>
             <div className="flex gap-2 w-full sm:w-1/3 relative min-w-0">

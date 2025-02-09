@@ -119,7 +119,7 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6" role="region" aria-label="Weather Information">
-            <section className="space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg">
+            <section className="space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg border border-mono-200 dark:border-mono-600">
               <h3 className="font-semibold text-lg mb-3 text-mono-800 dark:text-mono-100">Current Conditions</h3>
               <p className="border-b border-mono-200 dark:border-mono-600 pb-2 text-mono-700 dark:text-mono-300">
                 Temperature: <WeatherValue
@@ -159,7 +159,7 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
               </p>
             </section>
 
-            <section className="space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg">
+            <section className="space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg border border-mono-200 dark:border-mono-600">
               <h3 className="font-semibold text-lg mb-3 text-mono-800 dark:text-mono-100">Precipitation</h3>
               <p className="border-b border-mono-200 dark:border-mono-600 pb-2 text-mono-700 dark:text-mono-300">
                 Amount: <WeatherValue
@@ -177,9 +177,11 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
               </p>
             </section>
           </div>
-          <HourlyForecast data={weather.hourly} />
+          <div className="border-t border-mono-200 dark:border-mono-700 pt-6">
+            <HourlyForecast data={weather.hourly} />
+          </div>
         </div>
-        <div>
+        <div className="border-t xl:border-t-0 xl:border-l border-mono-200 dark:border-mono-700 pt-6 xl:pt-0 xl:pl-6">
           <DailyForecast data={weather.daily} />
         </div>
       </div>
