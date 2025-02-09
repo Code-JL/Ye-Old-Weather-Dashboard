@@ -2,28 +2,58 @@
 
 import axios from 'axios';
 import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LocationButton() {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const updateLocation = useCallback((urlParams: URLSearchParams) => {
-    // Check if we're in a browser environment
-    if (typeof window !== 'undefined') {
-      window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
-    }
-  }, []);
+    // Get the current path or default to root
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+    router.push(`${currentPath}?${urlParams.toString()}`);
+  }, [router]);
 
   const getLocation = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('https://ipapi.co/json/');
+      // Common axios config
+      const axiosConfig = {
+        timeout: 5000,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Ye Olde Weather Dashboard'
+        },
+        validateStatus: () => true
+      };
+
+      // Try ip-api.com first (fastest and most reliable)
+      const response = await axios.get('https://ip-api.com/json/', axiosConfig);
+      
+      if (response.data && response.status < 400 && response.data.status === 'success') {
+        const { city, lat, lon: longitude, regionName: state, country } = response.data;
+        
+        if (city && lat && longitude) {
+          const urlParams = new URLSearchParams();
+          urlParams.set('city', city);
+          urlParams.set('lat', lat.toString());
+          urlParams.set('lon', longitude.toString());
+          if (state) urlParams.set('state', state);
+          if (country) urlParams.set('country', country);
+          updateLocation(urlParams);
+          return;
+        }
+      }
+
+      // Fallback to ipapi.co if ip-api.com fails
+      const fallbackResponse = await axios.get('https://ipapi.co/json/');
       const { 
         city, 
         latitude, 
         longitude, 
         region: admin1, 
         country_name: country 
-      } = response.data;
+      } = fallbackResponse.data;
       
       if (city && latitude && longitude) {
         const urlParams = new URLSearchParams();
@@ -38,6 +68,7 @@ export default function LocationButton() {
       }
     } catch (error) {
       console.error('Failed to get location:', error);
+    } finally {
       setLoading(false);
     }
   };

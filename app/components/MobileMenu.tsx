@@ -40,6 +40,13 @@ export default function MobileMenu() {
           <div className="border-b border-mono-200 dark:border-mono-600">
             <div className="px-3 py-2">
               <Link
+                href={`/${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`}
+                className="block py-2 text-right text-mono-600 hover:text-mono-800 dark:text-mono-400 dark:hover:text-mono-200"
+                onClick={() => setIsOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
                 href={`/dashboard${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`}
                 className="block py-2 text-right text-mono-600 hover:text-mono-800 dark:text-mono-400 dark:hover:text-mono-200"
                 onClick={() => setIsOpen(false)}

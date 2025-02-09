@@ -106,6 +106,39 @@ export interface HistoricalWeather {
 }
 
 /**
+ * Represents air quality data
+ */
+export interface AirQuality {
+  /** PM10 concentration in μg/m³ */
+  pm10: number;
+  /** PM2.5 concentration in μg/m³ */
+  pm2_5: number;
+  /** European Air Quality Index (0-100+) */
+  european_aqi: number;
+}
+
+/**
+ * Represents UV data from the UV Index API
+ */
+export interface UVData {
+  ok: boolean;
+  latitude: number;
+  longitude: number;
+  now: {
+    time: string;
+    uvi: number;
+  };
+  forecast: {
+    time: string;
+    uvi: number;
+  }[];
+  history: {
+    time: string;
+    uvi: number;
+  }[];
+}
+
+/**
  * Represents the current weather measurements
  */
 export interface CurrentWeather {
@@ -121,6 +154,12 @@ export interface CurrentWeather {
   wind_speed_10m: number;
   /** WMO weather code */
   weathercode: WeatherCode;
+  /** Cloud cover percentage */
+  cloud_cover: number;
+  /** Air quality data */
+  air_quality: AirQuality;
+  /** UV Index data */
+  uv_index?: UVData;
 }
 
 /**

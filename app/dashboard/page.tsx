@@ -10,6 +10,7 @@ import Toast from '../components/Toast';
 
 // API URLs
 const OPEN_METEO_API_URL = 'https://api.open-meteo.com/v1/forecast';
+const AIR_QUALITY_API_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const GEOCODING_API_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 
 // Add new type at the top with other imports
@@ -31,24 +32,6 @@ export default function Dashboard() {
       <DashboardContent />
     </Suspense>
   );
-}
-
-function SearchParamsHandler({ onSearchParamsChange }: { onSearchParamsChange: (city: string, lat: number, lon: number, state?: string, country?: string) => void }) {
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const cityFromUrl = searchParams?.get('city');
-    const latFromUrl = searchParams?.get('lat');
-    const lonFromUrl = searchParams?.get('lon');
-    const stateFromUrl = searchParams?.get('state') ?? undefined;
-    const countryFromUrl = searchParams?.get('country') ?? undefined;
-    
-    if (cityFromUrl && latFromUrl && lonFromUrl) {
-      onSearchParamsChange(cityFromUrl, parseFloat(latFromUrl), parseFloat(lonFromUrl), stateFromUrl, countryFromUrl);
-    }
-  }, [searchParams, onSearchParamsChange]);
-
-  return null;
 }
 
 function DashboardContent() {
@@ -89,13 +72,42 @@ function DashboardContent() {
   const fetchWeatherData = useCallback(async (lat: number, lon: number) => {
     try {
       setLoading(true);
-      const weatherResponse = await axios.get(
-        `${OPEN_METEO_API_URL}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weathercode&hourly=temperature_2m,precipitation_probability,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&timezone=auto&forecast_days=14&past_days=7&decimal_places=3`
-      );
+      setError('');
+      
+      const [weatherResponse, airQualityResponse, uvResponse] = await Promise.all([
+        // Weather API call with cloud_cover added
+        axios.get(
+          `${OPEN_METEO_API_URL}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weathercode,cloud_cover&hourly=temperature_2m,precipitation_probability,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&timezone=auto&forecast_days=14&past_days=7&decimal_places=3`
+        ),
+        // Air Quality API call
+        axios.get(
+          `${AIR_QUALITY_API_URL}?latitude=${lat}&longitude=${lon}&current=pm10,pm2_5,european_aqi`
+        ),
+        // UV Index API call
+        axios.get(
+          `https://currentuvindex.com/api/v1/uvi?latitude=${lat}&longitude=${lon}`
+        )
+      ]);
+
       if (!weatherResponse.data) {
         throw new Error('No data received from weather API');
       }
-      setWeather(weatherResponse.data);
+
+      // Combine weather, air quality, and UV data
+      const weatherData = weatherResponse.data;
+      if (airQualityResponse.data?.current) {
+        weatherData.current.air_quality = {
+          pm10: airQualityResponse.data.current.pm10,
+          pm2_5: airQualityResponse.data.current.pm2_5,
+          european_aqi: airQualityResponse.data.current.european_aqi
+        };
+      }
+      
+      if (uvResponse.data?.ok) {
+        weatherData.current.uv_index = uvResponse.data;
+      }
+
+      setWeather(weatherData);
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
@@ -127,7 +139,7 @@ function DashboardContent() {
         if (city && latitude && longitude) {
           setCity(city);
           const urlParams = createLocationUrlParams(city, latitude, longitude, state, country);
-          router.push(`/dashboard?${urlParams.toString()}`);
+          router.replace(`/dashboard?${urlParams.toString()}`);
           await fetchWeatherData(latitude, longitude);
           return;
         }
@@ -142,7 +154,7 @@ function DashboardContent() {
         if (city && latitude && longitude) {
           setCity(city);
           const urlParams = createLocationUrlParams(city, latitude, longitude, state, country);
-          router.push(`/dashboard?${urlParams.toString()}`);
+          router.replace(`/dashboard?${urlParams.toString()}`);
           await fetchWeatherData(latitude, longitude);
           return;
         }
@@ -159,7 +171,7 @@ function DashboardContent() {
         if (city && latitude && longitude) {
           setCity(city);
           const urlParams = createLocationUrlParams(city, latitude, longitude, state, country);
-          router.push(`/dashboard?${urlParams.toString()}`);
+          router.replace(`/dashboard?${urlParams.toString()}`);
           await fetchWeatherData(latitude, longitude);
           return;
         }
@@ -174,7 +186,7 @@ function DashboardContent() {
         if (city && latitude && longitude) {
           setCity(city);
           const urlParams = createLocationUrlParams(city, latitude, longitude, state, country);
-          router.push(`/dashboard?${urlParams.toString()}`);
+          router.replace(`/dashboard?${urlParams.toString()}`);
           await fetchWeatherData(latitude, longitude);
           return;
         }
@@ -199,9 +211,21 @@ function DashboardContent() {
   }, [fetchWeatherData]);
 
   // Get user's location on component mount
+  const searchParams = useSearchParams();
   useEffect(() => {
-    getLocationByIP();
-  }, [getLocationByIP]);
+    const cityFromUrl = searchParams?.get('city') || '';
+    const latFromUrl = searchParams?.get('lat');
+    const lonFromUrl = searchParams?.get('lon');
+    const stateFromUrl = searchParams?.get('state') || undefined;
+    const countryFromUrl = searchParams?.get('country') || undefined;
+    
+    if (cityFromUrl && latFromUrl && lonFromUrl) {
+      handleSearchParamsChange(cityFromUrl, parseFloat(latFromUrl), parseFloat(lonFromUrl), stateFromUrl, countryFromUrl);
+    } else {
+      getLocationByIP();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array so it only runs once
 
   // Update selectCity to use new helper
   const selectCity = useCallback(async (result: CityResult) => {
@@ -429,10 +453,6 @@ function DashboardContent() {
               )}
             </div>
           </div>
-          
-          <Suspense fallback={<div>Loading search params...</div>}>
-            <SearchParamsHandler onSearchParamsChange={handleSearchParamsChange} />
-          </Suspense>
           
           {weather && (
             <WeatherDisplay weather={weather} />

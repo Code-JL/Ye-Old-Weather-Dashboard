@@ -9,6 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import MobileMenu from './MobileMenu';
+import TimeDisplay from './TimeDisplay';
 
 function SearchParamsHandler({ onSearchParamsChange }: { onSearchParamsChange: () => void }) {
   const searchParams = useSearchParams();
@@ -40,7 +41,7 @@ export default function Navigation() {
             <div className="flex justify-between h-16">
               <div className="flex">
                 <div className="flex-shrink-0 flex items-center">
-                  <Link href="/">
+                  <Link href={`/${searchParams?.toString() ? `?${searchParams.toString()}` : ''}`}>
                     <span className="text-xl font-title text-mono-800 dark:text-mono-100">
                       Ye Olde Weather
                     </span>
@@ -61,7 +62,8 @@ export default function Navigation() {
                   </Link>
                 </div>
               </div>
-              <div className="hidden sm:ml-6 sm:flex sm:items-center gap-2">
+              <div className="hidden sm:ml-6 sm:flex sm:items-center gap-4">
+                <TimeDisplay />
                 <Suspense fallback={<div>Loading search params...</div>}>
                   <SearchParamsHandler onSearchParamsChange={handleSearchParamsChange} />
                 </Suspense>
