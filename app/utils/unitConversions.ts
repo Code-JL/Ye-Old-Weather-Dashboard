@@ -13,52 +13,6 @@ const WIND_SPEED_TO_MS: Record<WindSpeedUnit, number> = {
   fts: 0.3048
 };
 
-// Memoized scale thresholds
-const BEAUFORT_SCALE = [
-  { threshold: 0.5, value: 0 },
-  { threshold: 1.5, value: 1 },
-  { threshold: 3.3, value: 2 },
-  { threshold: 5.5, value: 3 },
-  { threshold: 7.9, value: 4 },
-  { threshold: 10.7, value: 5 },
-  { threshold: 13.8, value: 6 },
-  { threshold: 17.1, value: 7 },
-  { threshold: 20.7, value: 8 },
-  { threshold: 24.4, value: 9 },
-  { threshold: 28.4, value: 10 },
-  { threshold: 32.6, value: 11 }
-] as const;
-
-const FUJITA_SCALE = [
-  { threshold: 39, value: 0 },
-  { threshold: 50, value: 1 },
-  { threshold: 61, value: 2 },
-  { threshold: 74, value: 3 },
-  { threshold: 89, value: 4 }
-] as const;
-
-const ENHANCED_FUJITA_SCALE = [
-  { threshold: 38, value: 0 },
-  { threshold: 49, value: 1 },
-  { threshold: 60, value: 2 },
-  { threshold: 74, value: 3 },
-  { threshold: 89, value: 4 }
-] as const;
-
-const SAFFIR_SIMPSON_SCALE = [
-  { threshold: 33, value: 0 },
-  { threshold: 43, value: 1 },
-  { threshold: 49, value: 2 },
-  { threshold: 58, value: 3 },
-  { threshold: 70, value: 4 }
-] as const;
-
-// Helper function to find scale value
-function findScaleValue(ms: number, scale: readonly { threshold: number; value: number }[]): number {
-  const result = scale.find(entry => ms < entry.threshold);
-  return result ? result.value : scale.length;
-}
-
 // Temperature conversions
 export const convertTemperature = (value: number, from: TemperatureUnit, to: TemperatureUnit): number => {
   if (isNaN(value)) throw new Error('Invalid temperature value');

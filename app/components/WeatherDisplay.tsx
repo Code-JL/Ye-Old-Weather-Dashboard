@@ -59,18 +59,13 @@ const WeatherValue = memo(function WeatherValue({
 
   if (isLoading || convertedValue === null) {
     return (
-      <span className="text-mono-400" aria-label={`Converting ${label}`}>
+      <span className="text-mono-400 dark:text-mono-500" aria-label={`Converting ${label}`}>
         Converting...
       </span>
     );
   }
 
   const formatValue = (val: number) => {
-    // Special cases that override global precision
-    if (label === 'wind speed' && (unit === 'bf' || unit === 'f' || unit === 'ef' || unit === 'ss')) {
-      return val.toFixed(0);  // Always show whole numbers for scales
-    }
-    
     return val.toFixed(Number(settings.precision));
   };
 
@@ -79,20 +74,11 @@ const WeatherValue = memo(function WeatherValue({
       'C': '°C',
       'F': '°F',
       'K': 'K',
-      'R': '°R',
-      'Re': '°Ré',
-      'Ro': '°Rø',
-      'N': '°N',
-      'D': '°D',
       'kts': 'kts',
       'mph': 'mph',
       'kmh': 'km/h',
       'ms': 'm/s',
       'fts': 'ft/s',
-      'bf': 'BF',
-      'f': 'F',
-      'ef': 'EF',
-      'ss': 'SS',
       'percent': '%',
       'decimal': '',
       'mm': 'mm',
@@ -105,7 +91,7 @@ const WeatherValue = memo(function WeatherValue({
 
   return (
     <span 
-      className="font-semibold"
+      className="font-semibold text-mono-800 dark:text-mono-100"
       aria-label={`${label}: ${formatValue(convertedValue)} ${getUnitSymbol(unit)}`}
     >
       {formatValue(convertedValue)} {getUnitSymbol(unit)}
