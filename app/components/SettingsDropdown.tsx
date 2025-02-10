@@ -29,12 +29,7 @@ export default function SettingsDropdown() {
   const temperatureOptions = [
     { value: 'C', label: 'Celsius (°C)' },
     { value: 'F', label: 'Fahrenheit (°F)' },
-    { value: 'K', label: 'Kelvin (K)' },
-    { value: 'R', label: 'Rankine (°R)' },
-    { value: 'Re', label: 'Réaumur (°Ré)' },
-    { value: 'Ro', label: 'Rømer (°Rø)' },
-    { value: 'N', label: 'Newton (°N)' },
-    { value: 'D', label: 'Delisle (°D)' }
+    { value: 'K', label: 'Kelvin (K)' }
   ];
 
   const windSpeedOptions = [
@@ -42,11 +37,7 @@ export default function SettingsDropdown() {
     { value: 'ms', label: 'Meters per second (m/s)' },
     { value: 'mph', label: 'Miles per hour (mph)' },
     { value: 'kts', label: 'Knots (kts)' },
-    { value: 'fts', label: 'Feet per second (ft/s)' },
-    { value: 'bf', label: 'Beaufort scale (BF)' },
-    { value: 'f', label: 'Fujita scale (F)' },
-    { value: 'ef', label: 'Enhanced Fujita scale (EF)' },
-    { value: 'ss', label: 'TORRO scale (SS)' }
+    { value: 'fts', label: 'Feet per second (ft/s)' }
   ];
 
   const humidityOptions = [
@@ -126,11 +117,11 @@ export default function SettingsDropdown() {
                       })}
                       className="mr-2"
                     />
-                    <label htmlFor="showSeconds" className="text-sm">Show Seconds</label>
+                    <label htmlFor="showSeconds" className="text-sm text-mono-700 dark:text-mono-300">Show Seconds</label>
                   </div>
 
                   <div>
-                    <label className="block text-xs mb-1">Timezone Format</label>
+                    <label className="block text-xs text-mono-700 dark:text-mono-300 mb-1">Timezone Format</label>
                     <select
                       value={settings.timeDisplay?.timezoneFormat ?? 'abbreviation'}
                       onChange={(e) => updateSettings({
@@ -156,7 +147,7 @@ export default function SettingsDropdown() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <label className="block text-sm font-medium mb-1">Temperature</label>
+                <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-1">Temperature</label>
                 <select
                   value={settings.temperature}
                   onChange={(e) => updateSettings({ ...settings, temperature: e.target.value as UnitSettings['temperature'] })}
@@ -173,7 +164,7 @@ export default function SettingsDropdown() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <label className="block text-sm font-medium mb-1">Wind Speed</label>
+                <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-1">Wind Speed</label>
                 <select
                   value={settings.windSpeed}
                   onChange={(e) => updateSettings({ ...settings, windSpeed: e.target.value as UnitSettings['windSpeed'] })}
@@ -190,7 +181,7 @@ export default function SettingsDropdown() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <label className="block text-sm font-medium mb-1">Humidity</label>
+                <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-1">Humidity</label>
                 <select
                   value={settings.humidity}
                   onChange={(e) => updateSettings({ ...settings, humidity: e.target.value as UnitSettings['humidity'] })}
@@ -207,7 +198,7 @@ export default function SettingsDropdown() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <label className="block text-sm font-medium mb-1">Precipitation</label>
+                <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-1">Precipitation</label>
                 <select
                   value={settings.precipitation}
                   onChange={(e) => updateSettings({ ...settings, precipitation: e.target.value as UnitSettings['precipitation'] })}
@@ -224,7 +215,7 @@ export default function SettingsDropdown() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
               >
-                <label className="block text-sm font-medium mb-1">Precision</label>
+                <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-1">Precision</label>
                 <select
                   value={settings.precision}
                   onChange={(e) => updateSettings({ ...settings, precision: e.target.value as UnitSettings['precision'] })}

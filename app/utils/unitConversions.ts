@@ -1,6 +1,6 @@
 // Type definitions for supported units
-export type TemperatureUnit = 'C' | 'F' | 'K' | 'R' | 'Re' | 'Ro' | 'N' | 'D';
-export type WindSpeedUnit = 'ms' | 'kts' | 'mph' | 'kmh' | 'fts' | 'bf' | 'f' | 'ef' | 'ss';
+export type TemperatureUnit = 'C' | 'F' | 'K';
+export type WindSpeedUnit = 'ms' | 'kts' | 'mph' | 'kmh' | 'fts';
 export type HumidityUnit = 'percent' | 'decimal';
 export type PrecipitationUnit = 'mm' | 'in' | 'cm';
 
@@ -10,11 +10,7 @@ const WIND_SPEED_TO_MS: Record<WindSpeedUnit, number> = {
   kts: 0.514444,
   mph: 0.44704,
   kmh: 0.277778,
-  fts: 0.3048,
-  bf: 1, // Not used directly
-  f: 1,  // Not used directly
-  ef: 1, // Not used directly
-  ss: 1  // Not used directly
+  fts: 0.3048
 };
 
 // Memoized scale thresholds
@@ -73,11 +69,6 @@ export const convertTemperature = (value: number, from: TemperatureUnit, to: Tem
   switch (from) {
     case 'F': celsius = (value - 32) * 5/9; break;
     case 'K': celsius = value - 273.15; break;
-    case 'R': celsius = (value - 491.67) * 5/9; break;
-    case 'Re': celsius = value * 1.25; break;
-    case 'Ro': celsius = (value - 7.5) * 40/21; break;
-    case 'N': celsius = value * 100/33; break;
-    case 'D': celsius = 100 - value * 2/3; break;
   }
 
   // Then convert from Celsius to target unit
@@ -85,11 +76,6 @@ export const convertTemperature = (value: number, from: TemperatureUnit, to: Tem
     case 'C': return celsius;
     case 'F': return celsius * 9/5 + 32;
     case 'K': return celsius + 273.15;
-    case 'R': return (celsius + 273.15) * 9/5;
-    case 'Re': return celsius * 0.8;
-    case 'Ro': return celsius * 21/40 + 7.5;
-    case 'N': return celsius * 33/100;
-    case 'D': return (100 - celsius) * 3/2;
   }
 };
 
@@ -101,17 +87,13 @@ export const convertWindSpeed = (value: number, from: WindSpeedUnit, to: WindSpe
   // Convert to m/s as base unit
   const ms = value * WIND_SPEED_TO_MS[from];
 
-  // Convert from m/s to target unit or scale
+  // Convert from m/s to target unit
   switch (to) {
     case 'ms': return ms;
     case 'kts': return ms / WIND_SPEED_TO_MS.kts;
     case 'mph': return ms / WIND_SPEED_TO_MS.mph;
     case 'kmh': return ms / WIND_SPEED_TO_MS.kmh;
     case 'fts': return ms / WIND_SPEED_TO_MS.fts;
-    case 'bf': return findScaleValue(ms, BEAUFORT_SCALE);
-    case 'f': return findScaleValue(ms, FUJITA_SCALE);
-    case 'ef': return findScaleValue(ms, ENHANCED_FUJITA_SCALE);
-    case 'ss': return findScaleValue(ms, SAFFIR_SIMPSON_SCALE);
   }
 };
 
