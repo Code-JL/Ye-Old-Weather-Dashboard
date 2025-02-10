@@ -77,7 +77,7 @@ function DashboardContent() {
       const [weatherResponse, airQualityResponse, uvResponse] = await Promise.all([
         // Weather API call with cloud_cover added
         axios.get(
-          `${OPEN_METEO_API_URL}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weathercode,cloud_cover&hourly=temperature_2m,precipitation_probability,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&timezone=auto&forecast_days=14&past_days=7&decimal_places=3`
+          `${OPEN_METEO_API_URL}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weathercode,cloud_cover&hourly=temperature_2m,precipitation_probability,weathercode,wind_speed_10m,relative_humidity_2m&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&timezone=auto&forecast_days=14&past_days=7&decimal_places=3`
         ),
         // Air Quality API call
         axios.get(

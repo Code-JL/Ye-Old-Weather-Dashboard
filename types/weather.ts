@@ -174,6 +174,10 @@ export interface HourlyForecast {
   precipitation_probability: number[];
   /** Weather code for each hour */
   weathercode: WeatherCode[];
+  /** Wind speed at 10 meters above ground for each hour */
+  wind_speed_10m: number[];
+  /** Relative humidity at 2 meters above ground for each hour */
+  relative_humidity_2m: number[];
 }
 
 /**
