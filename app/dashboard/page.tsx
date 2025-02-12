@@ -77,7 +77,7 @@ function DashboardContent() {
       const [weatherResponse, airQualityResponse, uvResponse] = await Promise.all([
         // Weather API call with cloud_cover added
         axios.get(
-          `${OPEN_METEO_API_URL}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weathercode,cloud_cover&hourly=temperature_2m,precipitation_probability,weathercode,wind_speed_10m,relative_humidity_2m&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&timezone=auto&forecast_days=14&past_days=7&decimal_places=3`
+          `${OPEN_METEO_API_URL}?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weathercode,cloud_cover&hourly=temperature_2m,precipitation_probability,weathercode,wind_speed_10m,wind_direction_10m,wind_gusts_10m,relative_humidity_2m&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&timezone=auto&forecast_days=14&past_days=7&decimal_places=3`
         ),
         // Air Quality API call
         axios.get(
@@ -92,6 +92,20 @@ function DashboardContent() {
       if (!weatherResponse.data) {
         throw new Error('No data received from weather API');
       }
+
+      // Debug log for wind data
+      console.log('Wind data from API:', {
+        current: {
+          speed: weatherResponse.data.current.wind_speed_10m,
+          direction: weatherResponse.data.current.wind_direction_10m,
+          gusts: weatherResponse.data.current.wind_gusts_10m
+        },
+        hourly: {
+          speed: weatherResponse.data.hourly.wind_speed_10m?.[0],
+          direction: weatherResponse.data.hourly.wind_direction_10m?.[0],
+          gusts: weatherResponse.data.hourly.wind_gusts_10m?.[0]
+        }
+      });
 
       // Combine weather, air quality, and UV data
       const weatherData = weatherResponse.data;

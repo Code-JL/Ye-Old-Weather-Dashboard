@@ -19,6 +19,7 @@ import HourlyForecast from './HourlyForecast';
 import DailyForecast from './DailyForecast';
 import { calculateFeelsLike } from '../utils/feelsLikeCalculator';
 import PrecipitationIcon from './PrecipitationIcon';
+import WindDirectionIndicator from './WindDirectionIndicator';
 
 type Props = {
   weather: WeatherData;
@@ -138,11 +139,11 @@ const HighLowDropdown = memo(function HighLowDropdown({
         </div>
         <button 
           onClick={onToggle}
-          className="ml-2 p-1 focus:outline-none"
+          className="ml-2 p-1 text-mono-700 dark:text-mono-300 hover:text-mono-900 dark:hover:text-mono-100 focus:outline-none transition-colors duration-200"
           aria-expanded={isOpen}
         >
           <svg 
-            className={`w-5 h-5 transition-transform duration-300 ease-in-out ${isOpen ? 'transform rotate-180' : ''}`} 
+            className={`w-5 h-5 transition-all duration-300 ease-in-out ${isOpen ? 'transform rotate-180' : ''}`} 
             fill="none" 
             viewBox="0 0 24 24" 
             stroke="currentColor"
@@ -210,9 +211,47 @@ function getTimeRangeForToday(times: string[]): { startIndex: number; endIndex: 
   };
 }
 
+// Update the getWindDirection helper function to handle invalid input
+const getWindDirection = (degrees: number | undefined): string => {
+  if (typeof degrees !== 'number' || isNaN(degrees)) {
+    return 'Not Available';
+  }
+  const directions = [
+    'North', 
+    'North-Northeast', 
+    'Northeast', 
+    'East-Northeast', 
+    'East', 
+    'East-Southeast', 
+    'Southeast', 
+    'South-Southeast', 
+    'South', 
+    'South-Southwest', 
+    'Southwest', 
+    'West-Southwest', 
+    'West', 
+    'West-Northwest', 
+    'Northwest', 
+    'North-Northwest'
+  ];
+  const index = Math.round(((degrees + 11.25) % 360) / 22.5);
+  return directions[index % 16];
+};
+
 const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
   const { settings } = useSettings();
   
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Wind data:', {
+        speed: weather.current.wind_speed_10m,
+        gusts: weather.current.wind_gusts_10m,
+        direction: weather.current.wind_direction_10m,
+        raw_weather: weather
+      });
+    }
+  }, [weather]);
+
   // Initialize state from localStorage with fallback values
   const [temperatureOpen, setTemperatureOpen] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -225,14 +264,6 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
   const [feelsLikeOpen, setFeelsLikeOpen] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('weatherDisplay_feelsLikeOpen');
-      return saved !== null ? JSON.parse(saved) : false;
-    }
-    return false;
-  });
-  
-  const [windSpeedOpen, setWindSpeedOpen] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('weatherDisplay_windSpeedOpen');
       return saved !== null ? JSON.parse(saved) : false;
     }
     return false;
@@ -256,10 +287,6 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
   }, [feelsLikeOpen]);
 
   useEffect(() => {
-    localStorage.setItem('weatherDisplay_windSpeedOpen', JSON.stringify(windSpeedOpen));
-  }, [windSpeedOpen]);
-
-  useEffect(() => {
     localStorage.setItem('weatherDisplay_humidityOpen', JSON.stringify(humidityOpen));
   }, [humidityOpen]);
 
@@ -270,10 +297,6 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
 
   const handleFeelsLikeToggle = () => {
     setFeelsLikeOpen(!feelsLikeOpen);
-  };
-
-  const handleWindSpeedToggle = () => {
-    setWindSpeedOpen(!windSpeedOpen);
   };
 
   const handleHumidityToggle = () => {
@@ -561,62 +584,6 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
                 </HighLowDropdown>
               </div>
               <div className="border-b border-mono-200 dark:border-mono-600 pb-4 pt-4">
-                <HighLowDropdown title="Wind Speed" isOpen={windSpeedOpen} onToggle={handleWindSpeedToggle} currentValue={<WeatherValue value={weather.current.wind_speed_10m} convert={convertWindSpeed as ConversionFunction} unit={settings.windSpeed} label="wind speed" fromUnit="kmh" />}>
-                  <p className="text-mono-700 dark:text-mono-300 flex justify-between">
-                    <span>
-                      High: <WeatherValue
-                        value={Math.max(
-                          weather.current.wind_speed_10m,
-                          weather.hourly.wind_speed_10m ? 
-                            Math.max(...weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))) :
-                            weather.current.wind_speed_10m
-                        )}
-                        convert={convertWindSpeed as ConversionFunction}
-                        unit={settings.windSpeed}
-                        label="high wind speed"
-                        fromUnit="kmh"
-                      />
-                    </span>
-                    <span className="text-sm text-mono-500 dark:text-mono-400">
-                      {weather.current.wind_speed_10m >= (weather.hourly.wind_speed_10m ? 
-                        Math.max(...weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))) :
-                        weather.current.wind_speed_10m) ? 'Now' : findTimeOfExtreme(
-                        weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time))),
-                        weather.hourly.time.slice(...Object.values(getTimeRangeForToday(weather.hourly.time))),
-                        true,
-                        weather.current.wind_speed_10m
-                      )}
-                    </span>
-                  </p>
-                  <p className="text-mono-700 dark:text-mono-300 flex justify-between">
-                    <span>
-                      Low: <WeatherValue
-                        value={Math.min(
-                          weather.current.wind_speed_10m,
-                          weather.hourly.wind_speed_10m ? 
-                            Math.min(...weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))) :
-                            weather.current.wind_speed_10m
-                        )}
-                        convert={convertWindSpeed as ConversionFunction}
-                        unit={settings.windSpeed}
-                        label="low wind speed"
-                        fromUnit="kmh"
-                      />
-                    </span>
-                    <span className="text-sm text-mono-500 dark:text-mono-400">
-                      {weather.current.wind_speed_10m <= (weather.hourly.wind_speed_10m ? 
-                        Math.min(...weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))) :
-                        weather.current.wind_speed_10m) ? 'Now' : findTimeOfExtreme(
-                        weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time))),
-                        weather.hourly.time.slice(...Object.values(getTimeRangeForToday(weather.hourly.time))),
-                        false,
-                        weather.current.wind_speed_10m
-                      )}
-                    </span>
-                  </p>
-                </HighLowDropdown>
-              </div>
-              <div className="pt-4">
                 <HighLowDropdown title="Humidity" isOpen={humidityOpen} onToggle={handleHumidityToggle} currentValue={<WeatherValue value={weather.current.relative_humidity_2m} convert={convertHumidity as ConversionFunction} unit={settings.humidity} label="humidity" fromUnit="percent" />}>
                   <p className="text-mono-700 dark:text-mono-300 flex justify-between">
                     <span>
@@ -705,6 +672,124 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
             <section className="h-full space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg border border-mono-200 dark:border-mono-600">
               <h3 className="font-semibold text-lg mb-3 text-mono-800 dark:text-mono-100">Air Quality</h3>
               {renderAirQuality()}
+            </section>
+
+            {/* Wind Section */}
+            <section className="h-full space-y-4 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg border border-mono-200 dark:border-mono-600">
+              <h3 className="font-semibold text-lg mb-3 text-mono-800 dark:text-mono-100">Wind</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Current Wind Info */}
+                <div className="col-span-2 flex items-center justify-between p-3 bg-mono-100 dark:bg-mono-600 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <WindDirectionIndicator 
+                      degrees={weather.current.wind_direction_10m ?? 0} 
+                      size={32}
+                      className="text-mono-800 dark:text-mono-200"
+                    />
+                    <div>
+                      <div className="text-sm text-mono-600 dark:text-mono-300">Current</div>
+                      <div className="font-semibold text-mono-800 dark:text-mono-100">
+                        <WeatherValue 
+                          value={weather.current.wind_speed_10m ?? 0}
+                          convert={convertWindSpeed as ConversionFunction}
+                          unit={settings.windSpeed}
+                          label="wind speed"
+                          fromUnit="kmh"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-mono-600 dark:text-mono-300">Direction</div>
+                    <div className="font-semibold text-mono-800 dark:text-mono-100">
+                      {getWindDirection(weather.current.wind_direction_10m)}
+                      {typeof weather.current.wind_direction_10m === 'number' && !isNaN(weather.current.wind_direction_10m) && (
+                        <span className="ml-1 text-sm text-mono-500 dark:text-mono-400">
+                          ({Math.round(weather.current.wind_direction_10m)}°)
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Wind Speed High/Low */}
+                <div className="space-y-2">
+                  <div className="text-sm text-mono-600 dark:text-mono-300">Speed Range</div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-mono-600 dark:text-mono-300">High:</span>
+                      <div className="flex items-center gap-1">
+                        <WeatherValue
+                          value={Math.max(
+                            weather.current.wind_speed_10m,
+                            weather.hourly.wind_speed_10m ? 
+                              Math.max(...weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))) :
+                              weather.current.wind_speed_10m
+                          )}
+                          convert={convertWindSpeed as ConversionFunction}
+                          unit={settings.windSpeed}
+                          label="high wind speed"
+                          fromUnit="kmh"
+                        />
+                        <span className="text-xs text-mono-500 dark:text-mono-400">
+                          {weather.current.wind_speed_10m >= (weather.hourly.wind_speed_10m ? 
+                            Math.max(...weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))) :
+                            weather.current.wind_speed_10m) ? 'Now' : findTimeOfExtreme(
+                            weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time))),
+                            weather.hourly.time.slice(...Object.values(getTimeRangeForToday(weather.hourly.time))),
+                            true,
+                            weather.current.wind_speed_10m
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-mono-600 dark:text-mono-300">Low:</span>
+                      <div className="flex items-center gap-1">
+                        <WeatherValue
+                          value={Math.min(
+                            weather.current.wind_speed_10m,
+                            weather.hourly.wind_speed_10m ? 
+                              Math.min(...weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))) :
+                              weather.current.wind_speed_10m
+                          )}
+                          convert={convertWindSpeed as ConversionFunction}
+                          unit={settings.windSpeed}
+                          label="low wind speed"
+                          fromUnit="kmh"
+                        />
+                        <span className="text-xs text-mono-500 dark:text-mono-400">
+                          {weather.current.wind_speed_10m <= (weather.hourly.wind_speed_10m ? 
+                            Math.min(...weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))) :
+                            weather.current.wind_speed_10m) ? 'Now' : findTimeOfExtreme(
+                            weather.hourly.wind_speed_10m.slice(...Object.values(getTimeRangeForToday(weather.hourly.time))),
+                            weather.hourly.time.slice(...Object.values(getTimeRangeForToday(weather.hourly.time))),
+                            false,
+                            weather.current.wind_speed_10m
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Wind Gusts */}
+                {typeof weather.current.wind_gusts_10m === 'number' && !isNaN(weather.current.wind_gusts_10m) && (
+                  <div className="space-y-2">
+                    <div className="text-sm text-mono-600 dark:text-mono-300">Gusts</div>
+                    <div className="flex justify-between">
+                      <span className="text-mono-600 dark:text-mono-300">Current:</span>
+                      <WeatherValue 
+                        value={weather.current.wind_gusts_10m}
+                        convert={convertWindSpeed as ConversionFunction}
+                        unit={settings.windSpeed}
+                        label="wind gusts"
+                        fromUnit="kmh"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </section>
           </div>
         </div>

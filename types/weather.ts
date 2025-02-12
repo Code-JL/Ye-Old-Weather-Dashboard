@@ -95,6 +95,8 @@ export interface HistoricalDailyWeather {
   temperature_2m_min: number[];
   /** Total precipitation sum for each day */
   precipitation_sum: number[];
+  /** Weather code for each day */
+  weathercode?: WeatherCode[];
 }
 
 /**
@@ -152,6 +154,10 @@ export interface CurrentWeather {
   precipitation: number;
   /** Wind speed at 10 meters above ground */
   wind_speed_10m: number;
+  /** Wind direction at 10 meters above ground in degrees */
+  wind_direction_10m: number;
+  /** Wind gusts at 10 meters above ground */
+  wind_gusts_10m: number;
   /** WMO weather code */
   weathercode: WeatherCode;
   /** Cloud cover percentage */
@@ -176,6 +182,10 @@ export interface HourlyForecast {
   weathercode: WeatherCode[];
   /** Wind speed at 10 meters above ground for each hour */
   wind_speed_10m: number[];
+  /** Wind direction at 10 meters above ground in degrees for each hour */
+  wind_direction_10m: number[];
+  /** Wind gusts at 10 meters above ground for each hour */
+  wind_gusts_10m: number[];
   /** Relative humidity at 2 meters above ground for each hour */
   relative_humidity_2m: number[];
 }
@@ -247,6 +257,8 @@ export function isWeatherData(data: unknown): data is WeatherData {
     'apparent_temperature',
     'precipitation',
     'wind_speed_10m',
+    'wind_direction_10m',
+    'wind_gusts_10m',
     'weathercode'
   ];
 
