@@ -1,9 +1,9 @@
-import './globals.css'
+import './styles/globals.css'
 import type { Metadata } from 'next'
 import { JetBrains_Mono } from 'next/font/google'
-import Navigation from './components/Navigation';
+import Navigation from '@/app/components/common/Navigation';
 import { ThemeProvider } from 'next-themes';
-import { SettingsProvider } from './contexts/SettingsContext';
+import { SettingsProvider } from '@/app/contexts/SettingsContext';
 
 const jetbrains = JetBrains_Mono({ 
   subsets: ['latin'],

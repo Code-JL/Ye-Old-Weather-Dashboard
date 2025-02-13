@@ -1,8 +1,7 @@
 'use client';
 
-import { WeatherData, WEATHER_DESCRIPTIONS } from '@/types/weather';
-import { useSettings } from '../contexts/SettingsContext';
-import ErrorBoundary from './ErrorBoundary';
+import { useSettings } from '@/app/contexts/SettingsContext';
+import ErrorBoundary from '@/app/components/common/ErrorBoundary';
 import { 
   convertTemperature, 
   convertWindSpeed, 
@@ -12,17 +11,73 @@ import {
   type WindSpeedUnit,
   type HumidityUnit,
   type PrecipitationUnit
-} from '../utils/unitConversions';
-import { useUnitConversion } from '../hooks/useUnitConversion';
+} from '@/app/lib/helpers/unitConversions';
+import { useUnitConversion } from '@/app/hooks/useUnitConversion';
 import { useEffect, memo, useState } from 'react';
 import HourlyForecast from './HourlyForecast';
 import DailyForecast from './DailyForecast';
-import { calculateFeelsLike } from '../utils/feelsLikeCalculator';
+import { calculateFeelsLike } from '@/app/lib/helpers/feelsLikeCalculator';
 import PrecipitationIcon from './PrecipitationIcon';
 import WindDirectionIndicator from './WindDirectionIndicator';
+import type { WeatherAPIResponse, AirQualityResponse, UVIndexResponse } from '@/app/api/types/responses';
+
+// Weather code type
+type WeatherCode = 0 | 1 | 2 | 3 | 45 | 48 | 51 | 53 | 55 | 56 | 57 | 61 | 63 | 65 | 66 | 67 | 71 | 73 | 75 | 77 | 80 | 81 | 82 | 85 | 86 | 95 | 96 | 99;
+
+// Weather code descriptions
+const WEATHER_DESCRIPTIONS: Record<WeatherCode, string> = {
+  0: 'Clear sky',
+  1: 'Mainly clear',
+  2: 'Partly cloudy',
+  3: 'Overcast',
+  45: 'Foggy',
+  48: 'Depositing rime fog',
+  51: 'Light drizzle',
+  53: 'Moderate drizzle',
+  55: 'Dense drizzle',
+  56: 'Light freezing drizzle',
+  57: 'Dense freezing drizzle',
+  61: 'Slight rain',
+  63: 'Moderate rain',
+  65: 'Heavy rain',
+  66: 'Light freezing rain',
+  67: 'Heavy freezing rain',
+  71: 'Slight snow fall',
+  73: 'Moderate snow fall',
+  75: 'Heavy snow fall',
+  77: 'Snow grains',
+  80: 'Slight rain showers',
+  81: 'Moderate rain showers',
+  82: 'Violent rain showers',
+  85: 'Slight snow showers',
+  86: 'Heavy snow showers',
+  95: 'Thunderstorm',
+  96: 'Thunderstorm with slight hail',
+  99: 'Thunderstorm with heavy hail'
+} as const;
+
+interface WeatherData extends WeatherAPIResponse {
+  current: WeatherAPIResponse['current'] & {
+    weathercode: WeatherCode;
+    air_quality?: AirQualityResponse['current'];
+    uv_index?: UVIndexResponse;
+  };
+  hourly: WeatherAPIResponse['hourly'] & {
+    weathercode: WeatherCode[];
+  };
+  daily: WeatherAPIResponse['daily'] & {
+    weathercode: WeatherCode[];
+  };
+  historical?: {
+    daily: WeatherAPIResponse['daily'] & {
+      weathercode: WeatherCode[];
+    };
+  };
+}
 
 type Props = {
   weather: WeatherData;
+  isLoading?: boolean;
 };
 
 type UnitType = TemperatureUnit | WindSpeedUnit | HumidityUnit | PrecipitationUnit;
@@ -476,7 +531,7 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
                           ),
                           ...weather.hourly.temperature_2m
                             .slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))
-                            .map(temp => 
+                            .map((temp: number) => 
                               calculateFeelsLike(
                                 temp,
                                 weather.current.relative_humidity_2m,
@@ -503,7 +558,7 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
                         );
                         const hourlyFeelsLike = weather.hourly.temperature_2m
                           .slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))
-                          .map(temp => 
+                          .map((temp: number) => 
                             calculateFeelsLike(
                               temp,
                               weather.current.relative_humidity_2m,
@@ -535,7 +590,7 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
                           ),
                           ...weather.hourly.temperature_2m
                             .slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))
-                            .map(temp => 
+                            .map((temp: number) => 
                               calculateFeelsLike(
                                 temp,
                                 weather.current.relative_humidity_2m,
@@ -562,7 +617,7 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
                         );
                         const hourlyFeelsLike = weather.hourly.temperature_2m
                           .slice(...Object.values(getTimeRangeForToday(weather.hourly.time)))
-                          .map(temp => 
+                          .map((temp: number) => 
                             calculateFeelsLike(
                               temp,
                               weather.current.relative_humidity_2m,

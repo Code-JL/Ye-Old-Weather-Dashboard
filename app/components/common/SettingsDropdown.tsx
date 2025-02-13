@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSettings } from '../contexts/SettingsContext';
-import type { UnitSettings } from '@/types/settings';
+import { useSettings } from '@/app/contexts/SettingsContext';
+import type { UnitSettings } from '@/app/types/settings';
 
 export default function SettingsDropdown() {
   const [isOpen, setIsOpen] = useState(false);

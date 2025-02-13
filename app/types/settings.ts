@@ -3,7 +3,7 @@ import type {
   WindSpeedUnit, 
   HumidityUnit, 
   PrecipitationUnit 
-} from '@/app/utils/unitConversions';
+} from '@/app/lib/helpers/unitConversions';
 
 /**
  * Represents the precision level for numerical values

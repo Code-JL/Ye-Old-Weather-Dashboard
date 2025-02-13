@@ -1,6 +1,6 @@
 'use client';
 
-import { useSettings } from '../contexts/SettingsContext';
+import { useSettings } from '@/app/contexts/SettingsContext';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 

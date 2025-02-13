@@ -1,8 +1,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import type { UnitSettings } from '@/types/settings';
-import { DEFAULT_SETTINGS } from '@/types/settings';
+import type { UnitSettings } from '@/app/types/settings';
+import { DEFAULT_SETTINGS } from '@/app/types/settings';
 
 type SettingsContextType = {
   settings: UnitSettings;

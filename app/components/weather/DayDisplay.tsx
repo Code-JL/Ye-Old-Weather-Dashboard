@@ -1,8 +1,7 @@
 'use client';
 
-import { WeatherData } from '@/types/weather';
-import { useSettings } from '../contexts/SettingsContext';
-import ErrorBoundary from './ErrorBoundary';
+import { useSettings } from '@/app/contexts/SettingsContext';
+import ErrorBoundary from '@/app/components/common/ErrorBoundary';
 import { 
   convertTemperature, 
   convertWindSpeed, 
@@ -12,15 +11,41 @@ import {
   type WindSpeedUnit,
   type HumidityUnit,
   type PrecipitationUnit
-} from '../utils/unitConversions';
-import { useUnitConversion } from '../hooks/useUnitConversion';
+} from '@/app/lib/helpers/unitConversions';
+import { useUnitConversion } from '@/app/hooks/useUnitConversion';
 import { useEffect, memo } from 'react';
 import HourlyForecast from './HourlyForecast';
 import PrecipitationIcon from './PrecipitationIcon';
 import { useSearchParams, useRouter } from 'next/navigation';
+import WindDirectionIndicator from './WindDirectionIndicator';
+import type { WeatherAPIResponse, AirQualityResponse, UVIndexResponse } from '@/app/api/types/responses';
+import LoadingSpinner from '@/app/components/common/LoadingSpinner';
+
+// Weather code type
+type WeatherCode = 0 | 1 | 2 | 3 | 45 | 48 | 51 | 53 | 55 | 56 | 57 | 61 | 63 | 65 | 66 | 67 | 71 | 73 | 75 | 77 | 80 | 81 | 82 | 85 | 86 | 95 | 96 | 99;
+
+interface WeatherData extends WeatherAPIResponse {
+  current: WeatherAPIResponse['current'] & {
+    weathercode: WeatherCode;
+    air_quality?: AirQualityResponse['current'];
+    uv_index?: UVIndexResponse;
+  };
+  hourly: WeatherAPIResponse['hourly'] & {
+    weathercode: WeatherCode[];
+  };
+  daily: WeatherAPIResponse['daily'] & {
+    weathercode: WeatherCode[];
+  };
+  historical?: {
+    daily: WeatherAPIResponse['daily'] & {
+      weathercode: WeatherCode[];
+    };
+  };
+}
 
 type Props = {
   weather: WeatherData;
+  isLoading?: boolean;
 };
 
 type UnitType = TemperatureUnit | WindSpeedUnit | HumidityUnit | PrecipitationUnit;
@@ -33,6 +58,33 @@ interface WeatherValueProps {
   label: string;
   fromUnit?: UnitType;
 }
+
+// Helper function to convert wind direction degrees to cardinal direction
+const getWindDirection = (degrees: number | undefined): string => {
+  if (typeof degrees !== 'number' || isNaN(degrees)) {
+    return 'Not Available';
+  }
+  const directions = [
+    'North', 
+    'North-Northeast', 
+    'Northeast', 
+    'East-Northeast', 
+    'East', 
+    'East-Southeast', 
+    'Southeast', 
+    'South-Southeast', 
+    'South', 
+    'South-Southwest', 
+    'Southwest', 
+    'West-Southwest', 
+    'West', 
+    'West-Northwest', 
+    'Northwest', 
+    'North-Northwest'
+  ];
+  const index = Math.round(((degrees + 11.25) % 360) / 22.5);
+  return directions[index % 16];
+};
 
 const WeatherValue = memo(function WeatherValue({ 
   value, 
@@ -108,7 +160,7 @@ const WeatherValue = memo(function WeatherValue({
   );
 });
 
-const DayDisplay = memo(function DayDisplay({ weather }: Props) {
+const DayDisplay = memo(function DayDisplay({ weather, isLoading = false }: Props) {
   const { settings } = useSettings();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -162,7 +214,7 @@ const DayDisplay = memo(function DayDisplay({ weather }: Props) {
 
   // Helper to get the correct temperature values based on day offset
   const getTemperatureValues = () => {
-    if (dayOffset < 0 && weather.historical) {
+    if (dayOffset < 0 && weather.historical?.daily) {
       // For past days, use historical data
       // Find the date we want from the historical data
       const targetDate = new Date();
@@ -170,37 +222,27 @@ const DayDisplay = memo(function DayDisplay({ weather }: Props) {
       targetDate.setDate(targetDate.getDate() + dayOffset);
       const targetDateStr = targetDate.toISOString().split('T')[0];
       
-      console.log('Looking for historical temperature data:');
-      console.log('Target date:', targetDateStr);
-      console.log('Historical dates:', weather.historical.daily.time);
-      
       // Find the index by matching the target date
       const dateIndex = weather.historical.daily.time.findIndex(date => date === targetDateStr);
-      console.log('Historical temperature index:', dateIndex);
 
       if (dateIndex !== -1) {
-        const values = {
+        return {
           high: weather.historical.daily.temperature_2m_max[dateIndex],
           low: weather.historical.daily.temperature_2m_min[dateIndex]
         };
-        console.log('Historical temperature values:', values);
-        return values;
       }
-      console.log('Date not found in historical temperature data');
     }
     
     // For today and future days, use daily forecast
-    const values = {
+    return {
       high: weather.daily.temperature_2m_max[dayIndex],
       low: weather.daily.temperature_2m_min[dayIndex]
     };
-    console.log('Using forecast temperature values:', values);
-    return values;
   };
 
   // Helper to get the correct precipitation values based on day offset
   const getPrecipitationValues = () => {
-    if (dayOffset < 0 && weather.historical) {
+    if (dayOffset < 0 && weather.historical?.daily) {
       // For past days, use historical data
       // Find the date we want from the historical data
       const targetDate = new Date();
@@ -208,37 +250,27 @@ const DayDisplay = memo(function DayDisplay({ weather }: Props) {
       targetDate.setDate(targetDate.getDate() + dayOffset);
       const targetDateStr = targetDate.toISOString().split('T')[0];
       
-      console.log('Looking for historical precipitation data:');
-      console.log('Target date:', targetDateStr);
-      console.log('Historical dates:', weather.historical.daily.time);
-      
       // Find the index by matching the target date
       const dateIndex = weather.historical.daily.time.findIndex(date => date === targetDateStr);
-      console.log('Historical precipitation index:', dateIndex);
 
       if (dateIndex !== -1) {
-        const values = {
+        return {
           total: weather.historical.daily.precipitation_sum[dateIndex],
           probability: null // Historical data doesn't include probability
         };
-        console.log('Historical precipitation values:', values);
-        return values;
       }
-      console.log('Date not found in historical precipitation data');
     }
     
     // For today and future days, use daily forecast
-    const values = {
+    return {
       total: weather.daily.precipitation_sum[dayIndex],
       probability: weather.daily.precipitation_probability_max[dayIndex]
     };
-    console.log('Using forecast precipitation values:', values);
-    return values;
   };
 
   // Helper to get the correct weather code
   const getWeatherCode = () => {
-    if (dayOffset < 0 && weather.historical?.daily.weathercode) {
+    if (dayOffset < 0 && weather.historical?.daily?.weathercode) {
       // Find the date we want from the historical data
       const targetDate = new Date();
       targetDate.setHours(0, 0, 0, 0); // Reset time to start of day
@@ -254,6 +286,78 @@ const DayDisplay = memo(function DayDisplay({ weather }: Props) {
     }
     return weather.daily.weathercode[dayIndex];
   };
+
+  // Helper to render humidity section
+  const renderHumidity = () => {
+    if (dayOffset >= 0) {
+      return (
+        <div className="flex justify-between items-center">
+          <span className="text-mono-600 dark:text-mono-300">Current:</span>
+          <WeatherValue 
+            value={weather.hourly.relative_humidity_2m[dayIndex * 24]}
+            convert={convertHumidity as ConversionFunction}
+            unit={settings.humidity}
+            label="humidity"
+            fromUnit="percent"
+          />
+        </div>
+      );
+    }
+
+    const historicalData = weather.historical?.daily;
+    if (!historicalData?.relative_humidity_2m_mean) {
+      return (
+        <span className="text-mono-500 dark:text-mono-400">N/A</span>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-mono-600 dark:text-mono-300">Average:</span>
+          <WeatherValue 
+            value={historicalData.relative_humidity_2m_mean[0]}
+            convert={convertHumidity as ConversionFunction}
+            unit={settings.humidity}
+            label="average humidity"
+            fromUnit="percent"
+          />
+        </div>
+        {historicalData.relative_humidity_2m_max && (
+          <div className="flex justify-between items-center">
+            <span className="text-mono-600 dark:text-mono-300">High:</span>
+            <WeatherValue 
+              value={historicalData.relative_humidity_2m_max[0]}
+              convert={convertHumidity as ConversionFunction}
+              unit={settings.humidity}
+              label="maximum humidity"
+              fromUnit="percent"
+            />
+          </div>
+        )}
+        {historicalData.relative_humidity_2m_min && (
+          <div className="flex justify-between items-center">
+            <span className="text-mono-600 dark:text-mono-300">Low:</span>
+            <WeatherValue 
+              value={historicalData.relative_humidity_2m_min[0]}
+              convert={convertHumidity as ConversionFunction}
+              unit={settings.humidity}
+              label="minimum humidity"
+              fromUnit="percent"
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   const tempValues = getTemperatureValues();
   const precipValues = getPrecipitationValues();
@@ -273,6 +377,7 @@ const DayDisplay = memo(function DayDisplay({ weather }: Props) {
             <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg">
               <h3 className="text-lg font-medium text-mono-800 dark:text-mono-100 mb-2">Temperature</h3>
               <div className="space-y-2">
+                {/* Current Temperature (Today Only) */}
                 {dayOffset === 0 && (
                   <div className="flex justify-between items-center border-b border-mono-200 dark:border-mono-600 pb-2 mb-2">
                     <span className="text-mono-600 dark:text-mono-300">Current:</span>
@@ -285,6 +390,32 @@ const DayDisplay = memo(function DayDisplay({ weather }: Props) {
                     />
                   </div>
                 )}
+                
+                {/* Average Temperature */}
+                <div className="flex justify-between items-center">
+                  <span className="text-mono-600 dark:text-mono-300">Average:</span>
+                  {dayOffset < 0 && weather.historical?.daily?.temperature_2m_mean ? (
+                    <WeatherValue 
+                      value={weather.historical.daily.temperature_2m_mean[0]}
+                      convert={convertTemperature as ConversionFunction}
+                      unit={settings.temperature}
+                      label="average temperature"
+                      fromUnit="C"
+                    />
+                  ) : dayOffset >= 0 ? (
+                    <WeatherValue 
+                      value={(tempValues.high + tempValues.low) / 2}
+                      convert={convertTemperature as ConversionFunction}
+                      unit={settings.temperature}
+                      label="average temperature"
+                      fromUnit="C"
+                    />
+                  ) : (
+                    <span className="text-mono-500 dark:text-mono-400">N/A</span>
+                  )}
+                </div>
+
+                {/* High Temperature */}
                 <div className="flex justify-between items-center">
                   <span className="text-mono-600 dark:text-mono-300">High:</span>
                   <WeatherValue 
@@ -295,6 +426,8 @@ const DayDisplay = memo(function DayDisplay({ weather }: Props) {
                     fromUnit="C"
                   />
                 </div>
+
+                {/* Low Temperature */}
                 <div className="flex justify-between items-center">
                   <span className="text-mono-600 dark:text-mono-300">Low:</span>
                   <WeatherValue 
@@ -309,40 +442,94 @@ const DayDisplay = memo(function DayDisplay({ weather }: Props) {
             </div>
 
             {/* Wind Section */}
-            <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-mono-800 dark:text-mono-100 mb-2">Wind</h3>
-              <div className="flex justify-between items-center">
-                <span className="text-mono-600 dark:text-mono-300">Speed:</span>
-                {dayOffset >= 0 ? (
-                  <WeatherValue 
-                    value={weather.hourly.wind_speed_10m[dayIndex * 24]}
-                    convert={convertWindSpeed as ConversionFunction}
-                    unit={settings.windSpeed}
-                    label="wind speed"
-                    fromUnit="kmh"
-                  />
-                ) : (
-                  <span className="text-mono-500 dark:text-mono-400">N/A</span>
-                )}
+            <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg col-span-2 lg:col-span-1">
+              <h3 className="text-lg font-medium text-mono-800 dark:text-mono-100 mb-4">Wind</h3>
+              <div className="space-y-6">
+                {/* Wind Speed and Direction */}
+                <div className="flex flex-col space-y-4">
+                  {/* Wind Direction Indicator */}
+                  <div className="flex justify-center py-2">
+                    {dayOffset >= 0 ? (
+                      <WindDirectionIndicator 
+                        degrees={weather.hourly.wind_direction_10m[dayIndex * 24] ?? 0} 
+                        size={48}
+                        className="text-mono-800 dark:text-mono-200"
+                      />
+                    ) : (
+                      weather.historical?.daily.wind_direction_10m_dominant && (
+                        <WindDirectionIndicator 
+                          degrees={weather.historical.daily.wind_direction_10m_dominant[0] ?? 0} 
+                          size={48}
+                          className="text-mono-800 dark:text-mono-200"
+                        />
+                      )
+                    )}
+                  </div>
+                  
+                  {/* Wind Speed and Cardinal Direction */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <div className="text-sm text-mono-600 dark:text-mono-300">Speed</div>
+                      <div className="font-semibold">
+                        {dayOffset >= 0 ? (
+                          <WeatherValue 
+                            value={weather.hourly.wind_speed_10m[dayIndex * 24]}
+                            convert={convertWindSpeed as ConversionFunction}
+                            unit={settings.windSpeed}
+                            label="wind speed"
+                            fromUnit="kmh"
+                          />
+                        ) : (
+                          weather.historical?.daily.wind_speed_10m_max ? (
+                            <WeatherValue 
+                              value={weather.historical.daily.wind_speed_10m_max[0]}
+                              convert={convertWindSpeed as ConversionFunction}
+                              unit={settings.windSpeed}
+                              label="max wind speed"
+                              fromUnit="kmh"
+                            />
+                          ) : (
+                            <span className="text-mono-500 dark:text-mono-400">N/A</span>
+                          )
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-sm text-mono-600 dark:text-mono-300">Direction</div>
+                      <div className="font-semibold text-mono-800 dark:text-mono-100">
+                        {dayOffset >= 0 ? (
+                          <>
+                            {getWindDirection(weather.hourly.wind_direction_10m[dayIndex * 24])}
+                            {typeof weather.hourly.wind_direction_10m[dayIndex * 24] === 'number' && (
+                              <div className="text-sm text-mono-500 dark:text-mono-400">
+                                {Math.round(weather.hourly.wind_direction_10m[dayIndex * 24])}°
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          weather.historical?.daily.wind_direction_10m_dominant ? (
+                            <>
+                              {getWindDirection(weather.historical.daily.wind_direction_10m_dominant[0])}
+                              <div className="text-sm text-mono-500 dark:text-mono-400">
+                                {Math.round(weather.historical.daily.wind_direction_10m_dominant[0])}°
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-mono-500 dark:text-mono-400">N/A</span>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Humidity Section */}
             <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-mono-800 dark:text-mono-100 mb-2">Humidity</h3>
-              <div className="flex justify-between items-center">
-                <span className="text-mono-600 dark:text-mono-300">Average:</span>
-                {dayOffset >= 0 ? (
-                  <WeatherValue 
-                    value={weather.hourly.relative_humidity_2m[dayIndex * 24]}
-                    convert={convertHumidity as ConversionFunction}
-                    unit={settings.humidity}
-                    label="humidity"
-                    fromUnit="percent"
-                  />
-                ) : (
-                  <span className="text-mono-500 dark:text-mono-400">N/A</span>
-                )}
+              <h3 className="text-lg font-medium text-mono-800 dark:text-mono-100 mb-4">Humidity</h3>
+              <div className="space-y-4">
+                {renderHumidity()}
               </div>
             </div>
 

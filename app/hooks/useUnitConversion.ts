@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { 
+import { 
   TemperatureUnit, 
   WindSpeedUnit, 
   HumidityUnit, 
-  PrecipitationUnit 
-} from '../utils/unitConversions';
+  PrecipitationUnit
+} from '@/app/lib/helpers/unitConversions';
 
 type UnitType = TemperatureUnit | WindSpeedUnit | HumidityUnit | PrecipitationUnit;
 type ConversionFunction = (value: number, from: UnitType, to: UnitType) => number;
