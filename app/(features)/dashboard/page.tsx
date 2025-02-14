@@ -94,7 +94,6 @@ function DashboardContent() {
   );
 
   const {
-    showToast,
     hideToast,
     showError,
     hideError,

@@ -26,7 +26,6 @@ function DayContent() {
   const dayOffset = parseInt(searchParams?.get('day') || '0');
 
   const {
-    showToast,
     hideToast,
     showError,
     hideError,

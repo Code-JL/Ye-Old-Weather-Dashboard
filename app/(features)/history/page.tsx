@@ -7,9 +7,16 @@ import { convertTemperature, convertPrecipitation } from '@/app/lib/helpers/unit
 import LoadingSpinner from '@/app/components/common/LoadingSpinner';
 import NotificationsWrapper from '@/app/components/common/NotificationsWrapper';
 import { useWeather } from '@/app/hooks/useWeather';
-import { useLocation } from '@/app/hooks/useLocation';
 import { useNotifications } from '@/app/hooks/useNotifications';
 import { useLocationRedirect } from '@/app/hooks/useLocationRedirect';
+
+interface WeatherEntry {
+  date: string;
+  source: 'historical' | 'current';
+  maxTemp: number;
+  minTemp: number;
+  precip: number;
+}
 
 export default function HistoryPage() {
   return (
@@ -76,7 +83,6 @@ function HistoryContent() {
   );
 
   const {
-    showToast,
     hideToast,
     hideError,
     toastState: { message: toastMessage, isVisible: isToastVisible },
@@ -136,14 +142,14 @@ function HistoryContent() {
                     ...Object.entries(
                       [...(weather.historical?.daily?.time ?? []).map((date: string, index: number) => ({
                         date,
-                        source: 'historical',
+                        source: 'historical' as const,
                         maxTemp: weather.historical?.daily?.temperature_2m_max[index] ?? 0,
                         minTemp: weather.historical?.daily?.temperature_2m_min[index] ?? 0,
                         precip: weather.historical?.daily?.precipitation_sum[index] ?? 0
                       })),
                       ...(weather.daily?.time ?? []).map((date: string, index: number) => ({
                         date,
-                        source: 'current',
+                        source: 'current' as const,
                         maxTemp: weather.daily?.temperature_2m_max?.[index] ?? 0,
                         minTemp: weather.daily?.temperature_2m_min?.[index] ?? 0,
                         precip: weather.daily?.precipitation_sum?.[index] ?? 0
@@ -154,7 +160,7 @@ function HistoryContent() {
                           acc[entry.date] = entry;
                         }
                         return acc;
-                      }, {} as Record<string, any>)
+                      }, {} as Record<string, WeatherEntry>)
                     )
                   ]
                     // Sort by date descending (most recent first)
