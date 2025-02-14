@@ -130,7 +130,7 @@ function NavigationContent() {
             </div>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <div className="hidden lg:ml-6 lg:flex lg:space-x-8">
               {NAV_LINKS.map(link => (
                 <Link
                   key={`${link.path}${('dayValue' in link) ? link.dayValue : ''}`}
@@ -144,7 +144,7 @@ function NavigationContent() {
           </div>
 
           {/* Desktop Right Section */}
-          <div className="hidden sm:ml-6 sm:flex sm:items-center gap-4">
+          <div className="hidden lg:ml-6 lg:flex lg:items-center gap-4">
             <TimeDisplay />
             <Suspense fallback={<LoadingSpinner size="sm" />}>
               <SearchParamsHandler onSearchParamsChange={handleSearchParamsChange} />
@@ -155,7 +155,7 @@ function NavigationContent() {
           </div>
 
           {/* Mobile Menu */}
-          <div className="sm:hidden">
+          <div className="lg:hidden">
             <MobileMenu />
           </div>
         </div>

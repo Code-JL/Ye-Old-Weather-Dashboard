@@ -290,22 +290,68 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false }: Prop
   // Helper to render humidity section
   const renderHumidity = () => {
     if (dayOffset >= 0) {
+      // For current and future days, calculate min, max, and average from hourly data
+      const dayStart = dayOffset * 24;
+      const dayEnd = dayStart + 24;
+      const dayHumidityValues = weather.hourly.relative_humidity_2m.slice(dayStart, dayEnd);
+      
+      const maxHumidity = Math.max(...dayHumidityValues);
+      const minHumidity = Math.min(...dayHumidityValues);
+      const averageHumidity = dayHumidityValues.reduce((sum, val) => sum + val, 0) / dayHumidityValues.length;
+
       return (
-        <div className="flex justify-between items-center">
-          <span className="text-mono-600 dark:text-mono-300">Current:</span>
-          <WeatherValue 
-            value={weather.hourly.relative_humidity_2m[dayIndex * 24]}
-            convert={convertHumidity as ConversionFunction}
-            unit={settings.humidity}
-            label="humidity"
-            fromUnit="percent"
-          />
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-mono-600 dark:text-mono-300">
+              {dayOffset === 0 ? 'Current:' : 'Average:'}
+            </span>
+            <WeatherValue 
+              value={dayOffset === 0 ? dayHumidityValues[0] : averageHumidity}
+              convert={convertHumidity as ConversionFunction}
+              unit={settings.humidity}
+              label={dayOffset === 0 ? "current humidity" : "average humidity"}
+              fromUnit="percent"
+            />
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-mono-600 dark:text-mono-300">High:</span>
+            <WeatherValue 
+              value={maxHumidity}
+              convert={convertHumidity as ConversionFunction}
+              unit={settings.humidity}
+              label="maximum humidity"
+              fromUnit="percent"
+            />
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-mono-600 dark:text-mono-300">Low:</span>
+            <WeatherValue 
+              value={minHumidity}
+              convert={convertHumidity as ConversionFunction}
+              unit={settings.humidity}
+              label="minimum humidity"
+              fromUnit="percent"
+            />
+          </div>
         </div>
       );
     }
 
+    // For past days, use historical data
     const historicalData = weather.historical?.daily;
     if (!historicalData?.relative_humidity_2m_mean) {
+      return (
+        <span className="text-mono-500 dark:text-mono-400">N/A</span>
+      );
+    }
+
+    // Find the correct index for the historical data
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + dayOffset);
+    const targetDateStr = targetDate.toISOString().split('T')[0];
+    const dateIndex = historicalData.time.findIndex(date => date === targetDateStr);
+
+    if (dateIndex === -1) {
       return (
         <span className="text-mono-500 dark:text-mono-400">N/A</span>
       );
@@ -316,7 +362,7 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false }: Prop
         <div className="flex justify-between items-center">
           <span className="text-mono-600 dark:text-mono-300">Average:</span>
           <WeatherValue 
-            value={historicalData.relative_humidity_2m_mean[0]}
+            value={historicalData.relative_humidity_2m_mean[dateIndex]}
             convert={convertHumidity as ConversionFunction}
             unit={settings.humidity}
             label="average humidity"
@@ -327,7 +373,7 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false }: Prop
           <div className="flex justify-between items-center">
             <span className="text-mono-600 dark:text-mono-300">High:</span>
             <WeatherValue 
-              value={historicalData.relative_humidity_2m_max[0]}
+              value={historicalData.relative_humidity_2m_max[dateIndex]}
               convert={convertHumidity as ConversionFunction}
               unit={settings.humidity}
               label="maximum humidity"
@@ -339,7 +385,7 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false }: Prop
           <div className="flex justify-between items-center">
             <span className="text-mono-600 dark:text-mono-300">Low:</span>
             <WeatherValue 
-              value={historicalData.relative_humidity_2m_min[0]}
+              value={historicalData.relative_humidity_2m_min[dateIndex]}
               convert={convertHumidity as ConversionFunction}
               unit={settings.humidity}
               label="minimum humidity"
@@ -577,7 +623,7 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false }: Prop
         <div className="flex justify-between items-center pt-4">
           <button
             onClick={handlePreviousDay}
-            className="flex items-center gap-2 px-4 py-2 bg-mono-50 dark:bg-mono-700 text-mono-800 dark:text-mono-100 hover:bg-mono-100 dark:hover:bg-mono-600 rounded-lg transition-colors border border-mono-200 dark:border-mono-600"
+            className="flex items-center gap-2 px-4 py-2 bg-mono-50 dark:bg-mono-700 text-mono-800 dark:text-mono-100 hover:bg-mono-100 dark:hover:bg-mono-600 rounded-lg border border-mono-200 dark:border-mono-600"
           >
             <svg 
               className="w-5 h-5" 
@@ -596,7 +642,7 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false }: Prop
           </button>
           <button
             onClick={handleNextDay}
-            className="flex items-center gap-2 px-4 py-2 bg-mono-50 dark:bg-mono-700 text-mono-800 dark:text-mono-100 hover:bg-mono-100 dark:hover:bg-mono-600 rounded-lg transition-colors border border-mono-200 dark:border-mono-600"
+            className="flex items-center gap-2 px-4 py-2 bg-mono-50 dark:bg-mono-700 text-mono-800 dark:text-mono-100 hover:bg-mono-100 dark:hover:bg-mono-600 rounded-lg border border-mono-200 dark:border-mono-600"
           >
             Next Day
             <svg 

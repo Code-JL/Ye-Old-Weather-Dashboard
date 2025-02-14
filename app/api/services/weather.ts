@@ -83,6 +83,7 @@ export async function fetchWeatherData({
 
     // Add historical request if needed
     if (pastDays > 0) {
+      console.log(`Making historical request for past ${pastDays} days`);
       requests.push(
         axios.get<WeatherAPIResponse>(constructWeatherUrl(WEATHER_API.HISTORICAL, latitude, longitude, {
           daily: WEATHER_VARIABLES.HISTORICAL,
@@ -108,6 +109,8 @@ export async function fetchWeatherData({
     if (!weatherResponse?.data) {
       throw new Error('Failed to fetch weather data');
     }
+
+    console.log('Historical response:', historicalResponse?.data);
 
     // Combine all data
     const weatherData: WeatherData = {
@@ -154,6 +157,8 @@ export async function fetchWeatherData({
         }
       };
     }
+
+    console.log('Final weather data:', weatherData);
 
     return weatherData;
   } catch (error) {

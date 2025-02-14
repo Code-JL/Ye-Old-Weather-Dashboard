@@ -148,7 +148,7 @@ const HourlyForecast = memo(function HourlyForecast({
               {morningHours.map((hourData) => (
                 <div key={hourData.time} className="flex-shrink-0 w-[120px]">
                   <div
-                    className="flex flex-col items-center bg-mono-100 dark:bg-mono-700 rounded-lg p-3 border border-mono-200 dark:border-mono-600 cursor-pointer hover:bg-mono-200 dark:hover:bg-mono-600 transition-colors h-full"
+                    className="flex flex-col items-center bg-mono-100 dark:bg-mono-700 rounded-lg p-3 border border-mono-200 dark:border-mono-600 cursor-pointer hover:bg-mono-200 dark:hover:bg-mono-600 h-full"
                     onClick={() => setSelectedHour(hourData)}
                   >
                     <div className="flex flex-col items-center gap-0.5">
@@ -188,7 +188,7 @@ const HourlyForecast = memo(function HourlyForecast({
               {afternoonHours.map((hourData) => (
                 <div key={hourData.time} className="flex-shrink-0 w-[120px]">
                   <div
-                    className="flex flex-col items-center bg-mono-100 dark:bg-mono-700 rounded-lg p-3 border border-mono-200 dark:border-mono-600 cursor-pointer hover:bg-mono-200 dark:hover:bg-mono-600 transition-colors h-full"
+                    className="flex flex-col items-center bg-mono-100 dark:bg-mono-700 rounded-lg p-3 border border-mono-200 dark:border-mono-600 cursor-pointer hover:bg-mono-200 dark:hover:bg-mono-600 h-full"
                     onClick={() => setSelectedHour(hourData)}
                   >
                     <div className="flex flex-col items-center gap-0.5">

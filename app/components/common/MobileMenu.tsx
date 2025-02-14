@@ -74,7 +74,7 @@ export default function MobileMenu() {
   }, [pathname, searchParams]);
 
   return (
-    <div className="relative sm:hidden">
+    <div className="relative lg:hidden">
       {/* Menu Button */}
       <div className="flex items-center h-16">
         <button
@@ -82,7 +82,7 @@ export default function MobileMenu() {
           className="p-2 rounded-lg bg-mono-100 dark:bg-mono-700 border border-mono-200 dark:border-mono-600 
             text-mono-600 hover:text-mono-800 dark:text-mono-400 dark:hover:text-mono-200 
             hover:bg-mono-200 dark:hover:bg-mono-600 
-            transition-all duration-200 transform hover:scale-105
+            transform hover:scale-105
             focus:outline-none focus:ring-2 focus:ring-mono-300 dark:focus:ring-mono-500"
           aria-label="Toggle mobile menu"
           aria-expanded={isOpen}
@@ -123,7 +123,7 @@ export default function MobileMenu() {
                     isLinkActive(link)
                       ? 'bg-mono-100 dark:bg-mono-700 text-mono-900 dark:text-mono-100'
                       : 'text-mono-600 hover:bg-mono-50 dark:text-mono-400 dark:hover:bg-mono-700'
-                  } transition-colors duration-200`}
+                  }`}
                   onClick={() => setIsOpen(false)}
                 >
                   {link.label}

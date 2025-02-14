@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
+import { useState, useEffect, useCallback, Suspense, useRef, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import debounce from 'lodash/debounce';
 import WeatherDisplay from '@/app/components/weather/WeatherDisplay';
@@ -9,6 +9,7 @@ import NotificationsWrapper from '@/app/components/common/NotificationsWrapper';
 import { useWeather } from '@/app/hooks/useWeather';
 import { useLocation } from '@/app/hooks/useLocation';
 import { useNotifications } from '@/app/hooks/useNotifications';
+import { useLocationRedirect } from '@/app/hooks/useLocationRedirect';
 import type { LocationData } from '@/app/api/types/responses';
 
 type DebouncedFunction = {
@@ -38,14 +39,40 @@ function DashboardContent() {
   // Create a ref for the debounced function
   const debouncedSearchRef = useRef<DebouncedFunction | null>(null);
 
+  // Get location data from URL parameters
+  const cityFromUrl = searchParams?.get('city') || '';
+  const stateFromUrl = searchParams?.get('state') || '';
+  const countryFromUrl = searchParams?.get('country') || '';
+  const latFromUrl = searchParams?.get('lat');
+  const lonFromUrl = searchParams?.get('lon');
+
+  const location = useMemo(() => {
+    if (latFromUrl && lonFromUrl) {
+      const lat = parseFloat(latFromUrl);
+      const lon = parseFloat(lonFromUrl);
+      
+      if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        return {
+          city: cityFromUrl,
+          state: stateFromUrl,
+          country: countryFromUrl,
+          latitude: lat,
+          longitude: lon
+        };
+      }
+    }
+    return null;
+  }, [cityFromUrl, stateFromUrl, countryFromUrl, latFromUrl, lonFromUrl]);
+
   // Use our custom hooks
   const { 
-    location,
     searchResults,
     isLoading: isLocationLoading,
-    detectLocation,
     searchLocation
   } = useLocation();
+
+  // Use the location redirect hook
+  const { createLocationUrlParams, handleLocationDetection } = useLocationRedirect();
 
   const {
     data: weather,
@@ -74,32 +101,6 @@ function DashboardContent() {
     toastState: { message: toastMessage, isVisible: isToastVisible },
     errorState
   } = useNotifications();
-
-  // Helper function to create URL params in consistent order
-  const createLocationUrlParams = useCallback((locationData: LocationData) => {
-    const urlParams = new URLSearchParams();
-    urlParams.set('city', locationData.city);
-    if (locationData.state) urlParams.set('state', locationData.state);
-    if (locationData.country) urlParams.set('country', locationData.country);
-    urlParams.set('lat', locationData.latitude.toFixed(2));
-    urlParams.set('lon', locationData.longitude.toFixed(2));
-    return urlParams;
-  }, []);
-
-  // Handle location detection
-  const handleLocationDetection = useCallback(async () => {
-    try {
-      const locationData = await detectLocation();
-      if (locationData) {
-        const urlParams = createLocationUrlParams(locationData);
-        router.replace(`/dashboard?${urlParams.toString()}`);
-      } else {
-        showToast('Unable to detect your location. Please use the search box to find your city.');
-      }
-    } catch {
-      showToast('Unable to detect your location. Please use the search box to find your city.');
-    }
-  }, [detectLocation, router, createLocationUrlParams, showToast]);
 
   // Handle city selection
   const handleCitySelect = useCallback(async (result: LocationData) => {
@@ -164,27 +165,12 @@ function DashboardContent() {
     }
   }, [showSuggestions, searchResults, selectedIndex, handleCitySelect]);
 
-  // Load initial location from URL or detect
+  // Check URL parameters and detect location if needed
   useEffect(() => {
-    const cityFromUrl = searchParams?.get('city');
-    const latFromUrl = searchParams?.get('lat');
-    const lonFromUrl = searchParams?.get('lon');
-    const stateFromUrl = searchParams?.get('state');
-    const countryFromUrl = searchParams?.get('country');
-    
-    if (cityFromUrl && latFromUrl && lonFromUrl) {
-      const locationData: LocationData = {
-        city: cityFromUrl,
-        latitude: parseFloat(latFromUrl),
-        longitude: parseFloat(lonFromUrl),
-        state: stateFromUrl || undefined,
-        country: countryFromUrl || undefined
-      };
-      handleCitySelect(locationData);
-    } else {
+    if (!cityFromUrl || !latFromUrl || !lonFromUrl) {
       handleLocationDetection();
     }
-  }, [searchParams, handleLocationDetection, handleCitySelect]);
+  }, [cityFromUrl, latFromUrl, lonFromUrl, handleLocationDetection]);
 
   return (
     <NotificationsWrapper
@@ -250,8 +236,7 @@ function DashboardContent() {
                   placeholder={location?.city || "Enter city name"}
                   className="flex-1 min-w-0 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-800 text-sm 
                     text-mono-900 dark:text-mono-100 dark:bg-mono-700 
-                    placeholder:text-mono-400 dark:placeholder:text-mono-500
-                    transition-colors duration-200"
+                    placeholder:text-mono-400 dark:placeholder:text-mono-500"
                   aria-label="Search for a city"
                   role="combobox"
                   aria-expanded={showSuggestions}
@@ -264,8 +249,7 @@ function DashboardContent() {
                   disabled={isLocationLoading || !inputValue.trim()}
                   className="px-4 py-2 bg-mono-800 text-mono-100 rounded-lg hover:bg-mono-900 
                     disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap 
-                    dark:bg-mono-700 dark:hover:bg-mono-600 dark:text-mono-100
-                    transition-colors duration-200 w-[80px] flex items-center justify-center"
+                    dark:bg-mono-700 dark:hover:bg-mono-600 dark:text-mono-100"
                   aria-label={isLocationLoading ? 'Loading location data' : 'Search for weather'}
                 >
                   {isLocationLoading ? (

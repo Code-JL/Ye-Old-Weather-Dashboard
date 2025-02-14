@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, Suspense } from 'react';
+import { useState, useCallback, useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useSettings } from '@/app/contexts/SettingsContext';
 import { convertTemperature, convertPrecipitation } from '@/app/lib/helpers/unitConversions';
@@ -9,6 +9,7 @@ import NotificationsWrapper from '@/app/components/common/NotificationsWrapper';
 import { useWeather } from '@/app/hooks/useWeather';
 import { useLocation } from '@/app/hooks/useLocation';
 import { useNotifications } from '@/app/hooks/useNotifications';
+import { useLocationRedirect } from '@/app/hooks/useLocationRedirect';
 
 export default function HistoryPage() {
   return (
@@ -27,12 +28,33 @@ function HistoryContent() {
   const searchParams = useSearchParams();
   const { settings } = useSettings();
 
-  // Use our custom hooks
-  const { 
-    location,
-    isLoading: isLocationLoading,
-    detectLocation
-  } = useLocation();
+  // Get location data from URL parameters
+  const cityFromUrl = searchParams?.get('city') || '';
+  const stateFromUrl = searchParams?.get('state') || '';
+  const countryFromUrl = searchParams?.get('country') || '';
+  const latFromUrl = searchParams?.get('lat');
+  const lonFromUrl = searchParams?.get('lon');
+
+  const location = useMemo(() => {
+    if (latFromUrl && lonFromUrl) {
+      const lat = parseFloat(latFromUrl);
+      const lon = parseFloat(lonFromUrl);
+      
+      if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        return {
+          city: cityFromUrl,
+          state: stateFromUrl,
+          country: countryFromUrl,
+          latitude: lat,
+          longitude: lon
+        };
+      }
+    }
+    return null;
+  }, [cityFromUrl, stateFromUrl, countryFromUrl, latFromUrl, lonFromUrl]);
+
+  // Use the location redirect hook
+  const { handleLocationDetection } = useLocationRedirect();
 
   const {
     data: weather,
@@ -48,7 +70,7 @@ function HistoryContent() {
     } : {
       latitude: 0,
       longitude: 0,
-      pastDays: 0,
+      pastDays,
       forecastDays: 1
     }
   );
@@ -65,24 +87,14 @@ function HistoryContent() {
     setPastDays(prev => prev + 7);
   }, []);
 
-  // Load initial location from URL or detect
+  // Check URL parameters and detect location if needed
   useEffect(() => {
-    const cityFromUrl = searchParams?.get('city');
-    const latFromUrl = searchParams?.get('lat');
-    const lonFromUrl = searchParams?.get('lon');
-    
-    if (cityFromUrl && latFromUrl && lonFromUrl) {
-      // Location already set in URL, no need to detect
-      return;
+    if (!cityFromUrl || !latFromUrl || !lonFromUrl) {
+      handleLocationDetection();
     }
+  }, [cityFromUrl, latFromUrl, lonFromUrl, handleLocationDetection]);
 
-    // No location in URL, try to detect
-    detectLocation().catch(() => {
-      showToast('Unable to detect your location. Please use the dashboard to select a location.');
-    });
-  }, [searchParams, detectLocation, showToast]);
-
-  const isLoading = isLocationLoading || isWeatherLoading;
+  const isLoading = isWeatherLoading;
 
   return (
     <NotificationsWrapper
@@ -119,31 +131,41 @@ function HistoryContent() {
                   </tr>
                 </thead>
                 <tbody>
-                  {weather.daily.time
-                    .map((date: string, index: number) => ({
-                      date,
-                      maxTemp: weather.daily.temperature_2m_max[index],
-                      minTemp: weather.daily.temperature_2m_min[index],
-                      precip: weather.daily.precipitation_sum[index]
-                    }))
-                    // Filter to get only dates up to today
-                    .filter((day: { date: string }) => {
-                      const dayDate = new Date(day.date);
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      return dayDate.getTime() <= today.getTime();
-                    })
-                    // Sort by date descending (most recent first)
-                    .sort((a: { date: string }, b: { date: string }) => 
-                      new Date(b.date).getTime() - new Date(a.date).getTime()
+                  {[
+                    // Create a Map to store the most recent data for each date
+                    ...Object.entries(
+                      [...(weather.historical?.daily?.time ?? []).map((date: string, index: number) => ({
+                        date,
+                        source: 'historical',
+                        maxTemp: weather.historical?.daily?.temperature_2m_max[index] ?? 0,
+                        minTemp: weather.historical?.daily?.temperature_2m_min[index] ?? 0,
+                        precip: weather.historical?.daily?.precipitation_sum[index] ?? 0
+                      })),
+                      ...(weather.daily?.time ?? []).map((date: string, index: number) => ({
+                        date,
+                        source: 'current',
+                        maxTemp: weather.daily?.temperature_2m_max?.[index] ?? 0,
+                        minTemp: weather.daily?.temperature_2m_min?.[index] ?? 0,
+                        precip: weather.daily?.precipitation_sum?.[index] ?? 0
+                      }))]
+                      .reduce((acc, entry) => {
+                        // Prefer current data over historical for overlapping dates
+                        if (!acc[entry.date] || entry.source === 'current') {
+                          acc[entry.date] = entry;
+                        }
+                        return acc;
+                      }, {} as Record<string, any>)
                     )
-                    .map(({ date, maxTemp, minTemp, precip }: {
-                      date: string;
-                      maxTemp: number;
-                      minTemp: number;
-                      precip: number;
-                    }) => (
-                      <tr key={date} className="border-t border-mono-200 dark:border-mono-700">
+                  ]
+                    // Sort by date descending (most recent first)
+                    .sort(([dateA], [dateB]) => 
+                      new Date(dateB).getTime() - new Date(dateA).getTime()
+                    )
+                    .map(([date, data]) => (
+                      <tr 
+                        key={`${date}-${data.source}`} 
+                        className="border-t border-mono-200 dark:border-mono-700"
+                      >
                         <td className="px-4 py-2 text-mono-700 dark:text-mono-300">
                           {new Date(date).toLocaleDateString('en-US', { 
                             weekday: 'long',
@@ -152,13 +174,22 @@ function HistoryContent() {
                           })}
                         </td>
                         <td className="px-4 py-2 text-mono-700 dark:text-mono-300">
-                          {Math.round(convertTemperature(maxTemp, 'C', settings.temperature))}°{settings.temperature}
+                          {Number.isFinite(data.maxTemp) ? 
+                            `${Math.round(convertTemperature(data.maxTemp, 'C', settings.temperature))}°${settings.temperature}` :
+                            'N/A'
+                          }
                         </td>
                         <td className="px-4 py-2 text-mono-700 dark:text-mono-300">
-                          {Math.round(convertTemperature(minTemp, 'C', settings.temperature))}°{settings.temperature}
+                          {Number.isFinite(data.minTemp) ? 
+                            `${Math.round(convertTemperature(data.minTemp, 'C', settings.temperature))}°${settings.temperature}` :
+                            'N/A'
+                          }
                         </td>
                         <td className="px-4 py-2 text-mono-700 dark:text-mono-300">
-                          {convertPrecipitation(precip, 'mm', settings.precipitation)} {settings.precipitation}
+                          {Number.isFinite(data.precip) ? 
+                            `${convertPrecipitation(data.precip, 'mm', settings.precipitation)} ${settings.precipitation}` :
+                            'N/A'
+                          }
                         </td>
                       </tr>
                     ))}
@@ -167,14 +198,16 @@ function HistoryContent() {
               <div className="mt-6 flex justify-center">
                 <button
                   onClick={handleLoadMore}
-                  disabled={isLoading}
+                  disabled={isLoading || !location}
                   className="px-4 py-2 bg-mono-800 text-mono-100 rounded-lg hover:bg-mono-900 
                     disabled:opacity-50 disabled:cursor-not-allowed
-                    dark:bg-mono-700 dark:hover:bg-mono-600 dark:text-mono-100
-                    transition-colors duration-200"
+                    dark:bg-mono-700 dark:hover:bg-mono-600 dark:text-mono-100"
+                  aria-label="Load more historical weather data"
                 >
                   {isLoading ? (
                     <LoadingSpinner size="sm" />
+                  ) : !location ? (
+                    'Waiting for location...'
                   ) : (
                     'Load More History'
                   )}

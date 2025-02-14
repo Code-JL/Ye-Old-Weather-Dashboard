@@ -31,7 +31,7 @@ export default function Toast({ message, duration = 10000, onClose }: ToastProps
           onClose?.();
         }}
         className="absolute -top-2 -right-2 bg-mono-700 dark:bg-mono-600 hover:bg-mono-600 dark:hover:bg-mono-500 
-          rounded-full p-1 shadow-md transition-colors"
+          rounded-full p-1 shadow-md"
         aria-label="Close notification"
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

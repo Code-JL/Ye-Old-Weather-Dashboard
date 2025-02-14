@@ -77,7 +77,7 @@ export default function LocationButton() {
     <button
       onClick={getLocation}
       disabled={loading}
-      className={`p-2 rounded-lg bg-mono-200 dark:bg-mono-700 hover:bg-mono-100 dark:hover:bg-mono-600 disabled:opacity-50 ${loading ? 'scale-95' : ''}`}
+      className={`p-2 rounded-full bg-mono-200 dark:bg-mono-700 hover:bg-mono-100 dark:hover:bg-mono-600 disabled:opacity-50 ${loading ? 'scale-95' : ''}`}
       title="Get current location"
       aria-label="Get current location"
     >

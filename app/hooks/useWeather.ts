@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { fetchWeatherData } from '@/app/api/services/weather';
 import type { WeatherData } from '@/app/api/services/weather';
 
@@ -9,11 +9,12 @@ interface UseWeatherOptions {
   retryDelay?: number;
 }
 
-interface UseWeatherParams {
+export interface UseWeatherParams {
   latitude: number;
   longitude: number;
   pastDays?: number;
   forecastDays?: number;
+  dayOffset?: number;
 }
 
 interface UseWeatherReturn {
@@ -34,19 +35,38 @@ export function useWeather(
   const [data, setData] = useState<WeatherData | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const prevParamsRef = useRef(params);
+  const isMountedRef = useRef(false);
 
-  const {
-    retryCount = DEFAULT_RETRY_COUNT,
-    retryDelay = DEFAULT_RETRY_DELAY
-  } = options;
+  const hasParamsChanged = useCallback(() => {
+    const prev = prevParamsRef.current;
+    return (
+      prev.latitude !== params.latitude ||
+      prev.longitude !== params.longitude ||
+      prev.pastDays !== params.pastDays ||
+      prev.forecastDays !== params.forecastDays ||
+      prev.dayOffset !== params.dayOffset
+    );
+  }, [params]);
 
   const fetchWithRetry = useCallback(async (attempt = 0) => {
+    const { retryCount = DEFAULT_RETRY_COUNT, retryDelay = DEFAULT_RETRY_DELAY } = options;
+
+    // Skip fetching if coordinates are invalid
+    if (params.latitude === 0 && params.longitude === 0) {
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
       const weatherData = await fetchWeatherData(params);
-      setData(weatherData);
-      setError(null);
+      if (weatherData) {
+        setData(weatherData);
+        setError(null);
+      }
+      // Update prevParamsRef after successful fetch
+      prevParamsRef.current = params;
     } catch (err) {
       console.error(`Attempt ${attempt + 1} failed:`, err);
       if (attempt < retryCount) {
@@ -58,16 +78,27 @@ export function useWeather(
     } finally {
       setIsLoading(false);
     }
-  }, [params, retryCount, retryDelay]);
+  }, [params, options]);
 
   const refetch = useCallback(() => {
     return fetchWithRetry();
   }, [fetchWithRetry]);
 
-  // Initial fetch
-  useState(() => {
-    fetchWithRetry();
-  });
+  // Initial fetch and refetch when parameters change
+  useEffect(() => {
+    const { latitude, longitude } = params;
+    
+    // Skip the initial fetch if coordinates are invalid
+    if (latitude === 0 && longitude === 0) {
+      return;
+    }
+
+    // Only fetch if it's the initial mount or parameters have actually changed
+    if (!isMountedRef.current || hasParamsChanged()) {
+      isMountedRef.current = true;
+      fetchWithRetry();
+    }
+  }, [params, fetchWithRetry, hasParamsChanged]);
 
   return {
     data,

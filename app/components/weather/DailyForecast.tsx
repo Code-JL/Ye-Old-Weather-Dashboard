@@ -124,8 +124,7 @@ const DailyForecast = memo(function DailyForecast({
               key={day.date}
               className="flex flex-col sm:flex-row items-start sm:items-center justify-between 
                 bg-mono-100 dark:bg-mono-700 rounded-lg p-4 space-y-2 sm:space-y-0 
-                border border-mono-200 dark:border-mono-600 
-                hover:bg-mono-200 dark:hover:bg-mono-600 transition-colors"
+                border border-mono-200 dark:border-mono-600"
             >
               {/* Date Section */}
               <div className="flex items-center space-x-4 w-full sm:w-auto">

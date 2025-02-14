@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import DayDisplay from '@/app/components/weather/DayDisplay';
 import LoadingSpinner from '@/app/components/common/LoadingSpinner';
 import NotificationsWrapper from '@/app/components/common/NotificationsWrapper';
 import { useWeather } from '@/app/hooks/useWeather';
 import { useNotifications } from '@/app/hooks/useNotifications';
+import { useLocationRedirect } from '@/app/hooks/useLocationRedirect';
 
 export default function DayPage() {
   return (
@@ -33,6 +34,9 @@ function DayContent() {
     errorState
   } = useNotifications();
 
+  // Use the location redirect hook
+  useLocationRedirect();
+
   // Get coordinates from URL
   const latFromUrl = searchParams?.get('lat');
   const lonFromUrl = searchParams?.get('lon');
@@ -41,25 +45,38 @@ function DayContent() {
   const pastDays = dayOffset < 0 ? Math.abs(dayOffset) : 0;
   const forecastDays = dayOffset > 0 ? dayOffset + 1 : 1;
 
-  // Use weather hook with proper parameters
+  // Memoize weather parameters to prevent unnecessary re-renders
+  const weatherParams = useMemo(() => {
+    if (latFromUrl && lonFromUrl) {
+      const lat = parseFloat(latFromUrl);
+      const lon = parseFloat(lonFromUrl);
+      
+      if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        return {
+          latitude: lat,
+          longitude: lon,
+          pastDays,
+          forecastDays,
+          dayOffset
+        };
+      }
+    }
+    return {
+      latitude: 0,
+      longitude: 0,
+      pastDays,
+      forecastDays,
+      dayOffset
+    };
+  }, [latFromUrl, lonFromUrl, pastDays, forecastDays, dayOffset]);
+
+  // Use weather hook with memoized parameters
   const {
     data: weather,
     isLoading: isWeatherLoading,
     error: weatherError,
     refetch: refetchWeather
-  } = useWeather(
-    latFromUrl && lonFromUrl ? {
-      latitude: parseFloat(latFromUrl),
-      longitude: parseFloat(lonFromUrl),
-      pastDays,
-      forecastDays
-    } : {
-      latitude: 0,
-      longitude: 0,
-      pastDays: 0,
-      forecastDays: 1
-    }
-  );
+  } = useWeather(weatherParams);
 
   // Validate coordinates
   useEffect(() => {
@@ -70,10 +87,8 @@ function DayContent() {
       if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
         showError('Invalid coordinates provided', 'Location Error');
       }
-    } else {
-      showToast('Please select a location from the dashboard.');
     }
-  }, [latFromUrl, lonFromUrl, showError, showToast]);
+  }, [latFromUrl, lonFromUrl, showError]);
 
   return (
     <NotificationsWrapper

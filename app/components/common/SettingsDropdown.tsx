@@ -62,7 +62,7 @@ export default function SettingsDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg bg-mono-200 dark:bg-mono-700 active:scale-95"
+        className="p-2 rounded-full bg-mono-200 dark:bg-mono-700 active:scale-95"
         aria-label="Settings"
       >
         <svg 
@@ -237,7 +237,7 @@ export default function SettingsDropdown() {
                   onClick={() => window.location.reload()}
                   className="w-full px-4 py-2 bg-mono-800 text-mono-100 rounded-lg hover:bg-mono-900 
                     dark:bg-mono-700 dark:hover:bg-mono-600 dark:text-mono-100
-                    transition-colors duration-200 text-sm flex items-center justify-center gap-2"
+                    text-sm flex items-center justify-center gap-2"
                 >
                   <svg 
                     className="w-4 h-4" 
@@ -252,7 +252,7 @@ export default function SettingsDropdown() {
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
                     />
                   </svg>
-                  Refresh to Apply Changes
+                  Reload
                 </button>
               </motion.div>
             </div>
