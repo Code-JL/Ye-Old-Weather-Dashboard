@@ -50,6 +50,9 @@ export type WeatherData = {
     daily: Omit<WeatherAPIResponse['daily'], 'weathercode'> & {
       weathercode: WeatherCode[];
     };
+    hourly: WeatherAPIResponse['hourly'] & {
+      weathercode: WeatherCode[];
+    };
   };
 };
 
@@ -87,6 +90,7 @@ export async function fetchWeatherData({
       requests.push(
         axios.get<WeatherAPIResponse>(constructWeatherUrl(WEATHER_API.HISTORICAL, latitude, longitude, {
           daily: WEATHER_VARIABLES.HISTORICAL,
+          hourly: WEATHER_VARIABLES.HOURLY,
           past_days: pastDays,
           forecast_days: 1
         }))
@@ -154,6 +158,10 @@ export async function fetchWeatherData({
           relative_humidity_2m_max: historicalResponse.data.daily.relative_humidity_2m_max,
           relative_humidity_2m_min: historicalResponse.data.daily.relative_humidity_2m_min,
           relative_humidity_2m_mean: historicalResponse.data.daily.relative_humidity_2m_mean
+        },
+        hourly: {
+          ...historicalResponse.data.hourly,
+          weathercode: historicalResponse.data.hourly.weathercode.map((code: number) => code as WeatherCode)
         }
       };
     }

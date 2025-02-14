@@ -109,7 +109,7 @@ function DayContent() {
               <LoadingSpinner size="lg" />
             </div>
           ) : weather ? (
-            <DayDisplay weather={weather} />
+            <DayDisplay weather={weather} dayOffset={dayOffset} />
           ) : null}
         </div>
       </main>

@@ -51,6 +51,7 @@ interface HourlyForecastProps {
     relative_humidity_2m: number[];
   };
   isLoading?: boolean;
+  dayOffset?: number;
 }
 
 interface HourData {
@@ -68,7 +69,8 @@ interface HourData {
 
 const HourlyForecast = memo(function HourlyForecast({ 
   data,
-  isLoading = false 
+  isLoading = false,
+  dayOffset = 0
 }: HourlyForecastProps) {
   const { settings } = useSettings();
   const [selectedHour, setSelectedHour] = useState<HourData | null>(null);
@@ -77,15 +79,17 @@ const HourlyForecast = memo(function HourlyForecast({
   const hourlyData = useMemo(() => {
     if (!data?.time) return [];
 
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + dayOffset);
+
     return data.time.map((time, index): HourData | null => {
       const date = new Date(time);
       const hour = date.getHours();
-      const today = new Date();
       
-      // Skip if not today
-      if (date.getDate() !== today.getDate() || 
-          date.getMonth() !== today.getMonth() || 
-          date.getFullYear() !== today.getFullYear()) {
+      // Skip if not the target date
+      if (date.getDate() !== targetDate.getDate() || 
+          date.getMonth() !== targetDate.getMonth() || 
+          date.getFullYear() !== targetDate.getFullYear()) {
         return null;
       }
 
@@ -106,7 +110,7 @@ const HourlyForecast = memo(function HourlyForecast({
         weatherCode: data.weathercode[index] as WeatherCode
       };
     }).filter(Boolean) as HourData[]; // Filter out null values
-  }, [data]);
+  }, [data, dayOffset]);
 
   // Split into two rows - morning (12am-11am) and afternoon (12pm-11pm)
   const morningHours = useMemo(() => 

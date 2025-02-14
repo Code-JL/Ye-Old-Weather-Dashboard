@@ -40,13 +40,17 @@ interface WeatherData extends WeatherAPIResponse {
     daily: WeatherAPIResponse['daily'] & {
       weathercode: WeatherCode[];
     };
+    hourly: WeatherAPIResponse['hourly'] & {
+      weathercode: WeatherCode[];
+    };
   };
 }
 
-type Props = {
+interface Props {
   weather: WeatherData;
   isLoading?: boolean;
-};
+  dayOffset: number;
+}
 
 type UnitType = TemperatureUnit | WindSpeedUnit | HumidityUnit | PrecipitationUnit;
 type ConversionFunction = (value: number, from: string, to: string) => number;
@@ -160,11 +164,10 @@ const WeatherValue = memo(function WeatherValue({
   );
 });
 
-const DayDisplay = memo(function DayDisplay({ weather, isLoading = false }: Props) {
+const DayDisplay = memo(function DayDisplay({ weather, isLoading = false, dayOffset }: Props) {
   const { settings } = useSettings();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const dayOffset = parseInt(searchParams?.get('day') || '0');
 
   // Helper function to construct URL with new day offset
   const constructDayUrl = (newDayOffset: number) => {
@@ -612,12 +615,13 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false }: Prop
           </div>
         </div>
 
-        {/* Hourly Forecast Section - Only show for today and future days */}
-        {dayOffset >= 0 && (
-          <div className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6">
-            <HourlyForecast data={weather.hourly} />
-          </div>
-        )}
+        {/* Hourly Forecast Section - Show for all days */}
+        <div className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6">
+          <HourlyForecast 
+            data={dayOffset < 0 && weather.historical?.hourly ? weather.historical.hourly : weather.hourly} 
+            dayOffset={dayOffset} 
+          />
+        </div>
 
         {/* Navigation Buttons */}
         <div className="flex justify-between items-center pt-4">

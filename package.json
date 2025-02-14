@@ -1,6 +1,6 @@
 {
   "name": "ye_olde_weather_dashboard",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
