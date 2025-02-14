@@ -4,7 +4,6 @@ import { useSearchParams, usePathname } from 'next/navigation';
 import ThemeToggle from '@/app/components/common/ThemeToggle';
 import LocationButton from '@/app/components/common/LocationButton';
 import SettingsDropdown from '@/app/components/common/SettingsDropdown';
-import TimeDisplay from '@/app/components/weather/TimeDisplay';
 
 // Types for navigation
 type DayLink = {

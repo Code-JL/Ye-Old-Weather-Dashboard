@@ -26,8 +26,6 @@ function DashboardContent() {
 
   // Get location data from URL parameters
   const cityFromUrl = searchParams?.get('city') || '';
-  const stateFromUrl = searchParams?.get('state') || '';
-  const countryFromUrl = searchParams?.get('country') || '';
   const latFromUrl = searchParams?.get('lat');
   const lonFromUrl = searchParams?.get('lon');
 
