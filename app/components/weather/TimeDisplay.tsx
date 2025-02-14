@@ -56,22 +56,22 @@ const TimeDisplay = () => {
   const timezoneStr = formatTimezone(timezone, settings.timeDisplay?.timezoneFormat || 'abbreviation');
 
   // Determine what to show based on screen width
-  const showDate = width >= 1024; // Show date only on lg screens and up
-  const showTimezone = width >= 768; // Show timezone only on md screens and up
+  const showDate = width >= 512; // Show date only on lg screens and up (1024px / 2 = 512px)
+  const showTimezone = width >= 384; // Show timezone only on md screens and up (768px / 2 = 384px)
 
   return (
-    <div className="hidden md:flex items-center gap-2 text-mono-600 dark:text-mono-400 text-sm">
+    <div className="hidden sm:flex items-center gap-2 text-mono-600 dark:text-mono-400 text-sm">
       {showDate && (
         <>
-          <span className="hidden xl:inline">{format(currentTime, dateFormat)}</span>
-          <span className="hidden xl:inline text-mono-400 dark:text-mono-500">|</span>
+          <span className="hidden lg:inline">{format(currentTime, dateFormat)}</span>
+          <span className="hidden lg:inline text-mono-400 dark:text-mono-500">|</span>
         </>
       )}
       <span>{format(currentTime, timeFormat)}</span>
       {showTimezone && timezoneStr && (
         <>
-          <span className="hidden lg:inline text-mono-400 dark:text-mono-500">|</span>
-          <span className="hidden lg:inline text-xs">{timezoneStr}</span>
+          <span className="hidden md:inline text-mono-400 dark:text-mono-500">|</span>
+          <span className="hidden md:inline text-xs">{timezoneStr}</span>
         </>
       )}
     </div>

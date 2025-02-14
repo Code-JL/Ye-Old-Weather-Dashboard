@@ -62,7 +62,9 @@ export default function SettingsDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-full bg-mono-200 dark:bg-mono-700 active:scale-95"
+        className="p-2 rounded-full bg-mono-200 dark:bg-mono-700 hover:bg-mono-300 dark:hover:bg-mono-600 
+          focus:outline-none focus:ring-2 focus:ring-mono-400 dark:focus:ring-mono-500 
+          transition-colors duration-300"
         aria-label="Settings"
       >
         <svg 

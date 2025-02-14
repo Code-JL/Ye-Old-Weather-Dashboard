@@ -14,7 +14,7 @@ type DayLink = {
 };
 
 type RegularLink = {
-  path: '/dashboard' | '/history';
+  path: '/dashboard' | '/history' | '/search' | '/about';
   label: string;
 };
 
@@ -25,7 +25,9 @@ const NAV_LINKS: NavLink[] = [
   { path: '/day', dayValue: 0, label: 'Today' },
   { path: '/day', dayValue: 1, label: 'Tomorrow' },
   { path: '/dashboard', label: 'Dashboard' },
-  { path: '/history', label: 'History' }
+  { path: '/history', label: 'History' },
+  { path: '/search', label: 'Search' },
+  { path: '/about', label: 'About' }
 ];
 
 export default function MobileMenu() {
@@ -74,7 +76,7 @@ export default function MobileMenu() {
   }, [pathname, searchParams]);
 
   return (
-    <div className="relative lg:hidden">
+    <div className="relative 2xl:hidden">
       {/* Menu Button */}
       <div className="flex items-center h-16">
         <button
@@ -130,11 +132,6 @@ export default function MobileMenu() {
                 </Link>
               ))}
             </div>
-          </div>
-
-          {/* Time Display */}
-          <div className="px-3 py-2 border-b border-mono-200 dark:border-mono-600">
-            <TimeDisplay />
           </div>
 
           {/* Controls */}

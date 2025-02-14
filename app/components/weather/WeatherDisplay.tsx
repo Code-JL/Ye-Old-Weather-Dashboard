@@ -386,7 +386,7 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
           </div>
           <div className="h-2 bg-mono-200 dark:bg-mono-600 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-mono-800 dark:bg-mono-400 transition-all duration-500"
+              className="h-full bg-mono-800 dark:bg-mono-400"
               style={{ width: `${percentage}%` }}
               role="progressbar"
               aria-valuenow={now.uvi}
@@ -446,7 +446,7 @@ const WeatherDisplay = memo(function WeatherDisplay({ weather }: Props) {
           </div>
           <div className="h-2 bg-mono-200 dark:bg-mono-600 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-mono-800 dark:bg-mono-400 transition-all duration-500"
+              className="h-full bg-mono-800 dark:bg-mono-400"
               style={{ width: `${percentage}%` }}
               role="progressbar"
               aria-valuenow={european_aqi}
