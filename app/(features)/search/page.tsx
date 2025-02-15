@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation';
 import debounce from 'lodash/debounce';
 import LoadingSpinner from '@/app/components/common/LoadingSpinner';
 import NotificationsWrapper from '@/app/components/common/NotificationsWrapper';
-import { useLocation } from '@/app/hooks/useLocation';
 import { useNotifications } from '@/app/hooks/useNotifications';
-import { useLocationRedirect } from '@/app/hooks/useLocationRedirect';
+import { createLocationUrlParams } from '@/app/hooks/useLocationRedirect';
 import type { LocationData } from '@/app/api/types/responses';
+import { useLocationContext } from '@/app/contexts/LocationContext';
 
 type DebouncedFunction = {
   (query: string): void;
@@ -37,14 +37,7 @@ function SearchContent() {
   const debouncedSearchRef = useRef<DebouncedFunction | null>(null);
 
   // Use our custom hooks
-  const { 
-    searchResults,
-    isLoading: isLocationLoading,
-    searchLocation
-  } = useLocation();
-
-  // Use the location redirect hook
-  const { createLocationUrlParams } = useLocationRedirect();
+  const { searchResults, isLoading: isLocationLoading, searchLocation } = useLocationContext();
 
   const {
     hideToast,
@@ -62,7 +55,7 @@ function SearchContent() {
     
     const urlParams = createLocationUrlParams(result);
     router.push(`/dashboard?${urlParams.toString()}`);
-  }, [router, createLocationUrlParams]);
+  }, [router]);
 
   // Initialize debounced search function
   useEffect(() => {
@@ -91,29 +84,21 @@ function SearchContent() {
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (!showSuggestions) return;
+    if (!showSuggestions || searchResults.length === 0) {
+      return;
+    }
 
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedIndex(prev => 
-          prev < searchResults.length - 1 ? prev + 1 : prev
-        );
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedIndex(prev => prev > 0 ? prev - 1 : prev);
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (selectedIndex >= 0 && selectedIndex < searchResults.length) {
-          handleCitySelect(searchResults[selectedIndex]);
-        }
-        break;
-      case 'Escape':
-        setShowSuggestions(false);
-        setSelectedIndex(-1);
-        break;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prevIndex => (prevIndex + 1) % searchResults.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prevIndex => (prevIndex - 1 + searchResults.length) % searchResults.length);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex !== -1) {
+        handleCitySelect(searchResults[selectedIndex]);
+      }
     }
   }, [showSuggestions, searchResults, selectedIndex, handleCitySelect]);
 
@@ -134,65 +119,35 @@ function SearchContent() {
           <h1 className="text-5xl font-title font-normal text-mono-800 dark:text-mono-100 text-center mb-12">
             Search Weather Location
           </h1>
-          
+
           <div className="max-w-xl mx-auto">
             <div className="relative">
               <input
                 type="text"
                 value={inputValue}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setInputValue(value);
-                  setSelectedIndex(-1);
-                  debouncedSearch(value);
+                onChange={e => {
+                  setInputValue(e.target.value);
+                  debouncedSearch(e.target.value);
                 }}
                 onKeyDown={handleKeyDown}
-                onFocus={() => {
-                  if (inputValue.trim().length > 2) {
-                    debouncedSearch(inputValue);
-                  }
-                }}
-                onBlur={() => {
-                  setTimeout(() => {
-                    if (!document.activeElement?.closest('#search-listbox')) {
-                      setShowSuggestions(false);
-                    }
-                  }, 300);
-                }}
-                placeholder="Enter city name"
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-mono-800 text-lg
-                  text-mono-900 dark:text-mono-100 dark:bg-mono-700 
-                  placeholder:text-mono-400 dark:placeholder:text-mono-500
-                  border-mono-300 dark:border-mono-600"
-                aria-label="Search for a city"
-                role="combobox"
-                aria-expanded={showSuggestions}
-                aria-controls="search-listbox"
-                aria-autocomplete="list"
-                aria-activedescendant={selectedIndex >= 0 ? `search-option-${selectedIndex}` : undefined}
+                placeholder="Search for a city..."
+                className="w-full px-4 py-2 rounded-md bg-mono-100 dark:bg-mono-700 text-mono-800 dark:text-mono-100 placeholder-mono-500 dark:placeholder-mono-400 focus:outline-none focus:ring-2 focus:ring-mono-400 dark:focus:ring-mono-500"
               />
-              
+
               {showSuggestions && searchResults.length > 0 && (
-                <div 
-                  id="search-listbox"
-                  className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-mono-700 rounded-lg shadow-lg z-10
-                    max-h-60 overflow-y-auto border border-mono-200 dark:border-mono-600"
+                <div
+                  className="absolute z-10 w-full mt-1 bg-white dark:bg-mono-800 rounded-md shadow-lg max-h-60 overflow-auto"
                   role="listbox"
-                  aria-label="Search results"
                 >
                   {searchResults.map((result, index) => (
                     <button
-                      key={`${result.city}-${result.latitude}-${result.longitude}`}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleCitySelect(result);
-                      }}
-                      className={`w-full text-left px-4 py-3 hover:bg-mono-100 dark:hover:bg-mono-600 
-                        first:rounded-t-lg last:rounded-b-lg text-base text-mono-800 dark:text-mono-100
-                        ${index === selectedIndex ? 'bg-mono-100 dark:bg-mono-600' : ''}`}
+                      key={`${result.city}-${result.state}-${result.country}`}
+                      onClick={() => handleCitySelect(result)}
+                      className={`w-full px-4 py-2 text-left hover:bg-mono-100 dark:hover:bg-mono-700 ${
+                        index === selectedIndex ? 'bg-mono-200 dark:bg-mono-600' : ''
+                      }`}
                       role="option"
                       aria-selected={index === selectedIndex}
-                      id={`search-option-${index}`}
                     >
                       <div className="font-semibold">{result.city}</div>
                       <div className="text-sm text-mono-500 dark:text-mono-400">
@@ -204,15 +159,15 @@ function SearchContent() {
               )}
 
               {isLocationLoading && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="absolute right-0 top-0 bottom-0 flex items-center pr-3">
                   <LoadingSpinner size="sm" />
                 </div>
               )}
             </div>
 
             {inputValue.trim().length > 0 && !isLocationLoading && searchResults.length === 0 && (
-              <p className="mt-4 text-center text-mono-500 dark:text-mono-400">
-                No locations found. Try a different search term.
+              <p className="mt-2 text-mono-500 dark:text-mono-400">
+                No results found for &quot;{inputValue}&quot;. Please try a different search term.
               </p>
             )}
           </div>

@@ -7,7 +7,7 @@ import LoadingSpinner from '@/app/components/common/LoadingSpinner';
 import NotificationsWrapper from '@/app/components/common/NotificationsWrapper';
 import { useWeather } from '@/app/hooks/useWeather';
 import { useNotifications } from '@/app/hooks/useNotifications';
-import { useLocationRedirect } from '@/app/hooks/useLocationRedirect';
+import { useLocationContext } from '@/app/contexts/LocationContext';
 
 export default function DayPage() {
   return (
@@ -33,8 +33,7 @@ function DayContent() {
     errorState
   } = useNotifications();
 
-  // Use the location redirect hook
-  useLocationRedirect();
+  const { isLoading: isLocationLoading } = useLocationContext();
 
   // Get coordinates from URL
   const latFromUrl = searchParams?.get('lat');
@@ -104,7 +103,7 @@ function DayContent() {
     >
       <main className="min-h-screen bg-gradient-to-b from-mono-100 to-mono-200 dark:from-mono-800 dark:to-mono-900 p-8">
         <div className="max-w-[2000px] mx-auto">
-          {isWeatherLoading ? (
+          {isWeatherLoading || isLocationLoading ? (
             <div className="flex justify-center py-12">
               <LoadingSpinner size="lg" />
             </div>

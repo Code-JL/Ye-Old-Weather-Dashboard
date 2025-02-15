@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from 'next-themes';
 import { SettingsProvider } from '@/app/contexts/SettingsContext';
+import { useLocationContext } from '@/app/contexts/LocationContext';
 import ThemeToggle from '@/app/components/common/ThemeToggle';
 import LocationButton from '@/app/components/common/LocationButton';
 import SettingsDropdown from '@/app/components/common/SettingsDropdown';
@@ -62,11 +63,12 @@ function NavigationContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { showToast } = useNotifications();
+  const { location, isLoading: isLocationLoading } = useLocationContext();
 
   // Get location data from URL parameters
-  const cityFromUrl = searchParams?.get('city') || '';
-  const stateFromUrl = searchParams?.get('state') || '';
-  const countryFromUrl = searchParams?.get('country') || '';
+  const cityFromUrl = location?.city || '';
+  const stateFromUrl = location?.state || '';
+  const countryFromUrl = location?.country || '';
 
   const handleSearchParamsChange = useCallback(() => {
     showToast('Location updated');
@@ -193,7 +195,7 @@ function NavigationContent() {
               <Suspense fallback={<LoadingSpinner size="sm" />}>
                 <SearchParamsHandler onSearchParamsChange={handleSearchParamsChange} />
               </Suspense>
-              <LocationButton />
+              <LocationButton isLoading={isLocationLoading} />
               <SettingsDropdown />
               <ThemeToggle />
             </div>

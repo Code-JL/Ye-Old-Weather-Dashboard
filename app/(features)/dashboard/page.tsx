@@ -1,13 +1,13 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import WeatherDisplay from '@/app/components/weather/WeatherDisplay';
 import LoadingSpinner from '@/app/components/common/LoadingSpinner';
 import NotificationsWrapper from '@/app/components/common/NotificationsWrapper';
 import { useWeather } from '@/app/hooks/useWeather';
 import { useNotifications } from '@/app/hooks/useNotifications';
-import { useLocationRedirect } from '@/app/hooks/useLocationRedirect';
+import { useLocationContext } from '@/app/contexts/LocationContext';
 
 export default function Dashboard() {
   return (
@@ -24,13 +24,12 @@ export default function Dashboard() {
 function DashboardContent() {
   const searchParams = useSearchParams();
 
-  // Get location data from URL parameters
-  const cityFromUrl = searchParams?.get('city') || '';
+  // Get coordinates from URL parameters
   const latFromUrl = searchParams?.get('lat');
   const lonFromUrl = searchParams?.get('lon');
 
-  // Use the location redirect hook
-  const { handleLocationDetection } = useLocationRedirect();
+  // Use the location context
+  const { isLoading: isLocationLoading } = useLocationContext();
 
   const {
     data: weather,
@@ -58,13 +57,6 @@ function DashboardContent() {
     errorState
   } = useNotifications();
 
-  // Check URL parameters and detect location if needed
-  useEffect(() => {
-    if (!cityFromUrl || !latFromUrl || !lonFromUrl) {
-      handleLocationDetection();
-    }
-  }, [cityFromUrl, latFromUrl, lonFromUrl, handleLocationDetection]);
-
   return (
     <NotificationsWrapper
       toast={isToastVisible ? {
@@ -85,7 +77,7 @@ function DashboardContent() {
           </h1>
           
           <div className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6">
-            {isWeatherLoading ? (
+            {isWeatherLoading || isLocationLoading ? (
               <div className="flex justify-center py-12">
                 <LoadingSpinner size="lg" />
               </div>

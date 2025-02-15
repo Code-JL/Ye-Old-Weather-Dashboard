@@ -4,6 +4,7 @@ import { JetBrains_Mono } from 'next/font/google'
 import Navigation from '@/app/components/common/Navigation';
 import { ThemeProvider } from 'next-themes';
 import { SettingsProvider } from '@/app/contexts/SettingsContext';
+import { LocationProvider } from '@/app/contexts/LocationContext';
 
 const jetbrains = JetBrains_Mono({ 
   subsets: ['latin'],
@@ -25,8 +26,10 @@ export default function RootLayout({
       <body className={`${jetbrains.variable} font-mono dark:bg-mono-900 dark:text-mono-100`}>
         <ThemeProvider attribute="class">
           <SettingsProvider>
-            <Navigation />
-            {children}
+            <LocationProvider>
+              <Navigation />
+              {children}
+            </LocationProvider>
           </SettingsProvider>
         </ThemeProvider>
       </body>
