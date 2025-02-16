@@ -21,6 +21,8 @@ import WindDirectionIndicator from './WindDirectionIndicator';
 import type { WeatherAPIResponse, AirQualityResponse, UVIndexResponse } from '@/app/api/types/responses';
 import LoadingSpinner from '@/app/components/common/LoadingSpinner';
 import SunriseSunset from './SunriseSunset';
+import UVIndexDisplay from './UVIndexDisplay';
+import AirQualityDisplay from './AirQualityDisplay';
 
 // Weather code type
 type WeatherCode = 0 | 1 | 2 | 3 | 45 | 48 | 51 | 53 | 55 | 56 | 57 | 61 | 63 | 65 | 66 | 67 | 71 | 73 | 75 | 77 | 80 | 81 | 82 | 85 | 86 | 95 | 96 | 99;
@@ -33,16 +35,29 @@ interface WeatherData extends WeatherAPIResponse {
   };
   hourly: WeatherAPIResponse['hourly'] & {
     weathercode: WeatherCode[];
+    air_quality?: AirQualityResponse['hourly'];
   };
   daily: WeatherAPIResponse['daily'] & {
     weathercode: WeatherCode[];
+    uv_index_clear_sky_max?: number[];
+    uv_index_max?: number[];
+    pm10_max?: number[];
+    pm10_mean?: number[];
+    pm2_5_max?: number[];
+    pm2_5_mean?: number[];
+    european_aqi_max?: number[];
+    european_aqi_mean?: number[];
+    us_aqi_max?: number[];
+    us_aqi_mean?: number[];
   };
   historical?: {
     daily: WeatherAPIResponse['daily'] & {
       weathercode: WeatherCode[];
+      uv_index_clear_sky_max?: number[];
     };
     hourly: WeatherAPIResponse['hourly'] & {
       weathercode: WeatherCode[];
+      air_quality?: AirQualityResponse['hourly'];
     };
   };
 }
@@ -692,6 +707,44 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false, dayOff
               )}
             </div>
           </div>
+        </div>
+
+        {/* UV Index and Air Quality Sections */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* UV Index Section */}
+          <UVIndexDisplay
+            currentUVIndex={dayOffset === 0 ? weather.current.uv_index?.now.uvi : undefined}
+            dailyUVIndexMax={weather.daily.uv_index_max}
+            dailyClearSkyUVIndexMax={weather.daily.uv_index_clear_sky_max}
+            hourlyUVIndex={dayOffset < 0 && weather.historical?.hourly.air_quality?.uv_index ? 
+              weather.historical.hourly.air_quality.uv_index :
+              weather.hourly.air_quality?.uv_index}
+            hourlyUVIndexClearSky={dayOffset < 0 && weather.historical?.hourly.air_quality?.uv_index_clear_sky ?
+              weather.historical.hourly.air_quality.uv_index_clear_sky :
+              weather.hourly.air_quality?.uv_index_clear_sky}
+            hourlyTime={dayOffset < 0 && weather.historical?.hourly.time ?
+              weather.historical.hourly.time :
+              weather.hourly.time}
+            dayOffset={dayOffset}
+            isLoading={isLoading}
+          />
+
+          {/* Air Quality Section */}
+          <AirQualityDisplay
+            currentAirQuality={weather.current.air_quality}
+            dailyAQIMax={weather.daily.european_aqi_max}
+            dailyAQIMean={weather.daily.european_aqi_mean}
+            dailyPM10Mean={weather.daily.pm10_mean}
+            dailyPM2_5Mean={weather.daily.pm2_5_mean}
+            hourlyAirQuality={dayOffset < 0 && weather.historical?.hourly.air_quality ? 
+              weather.historical.hourly.air_quality :
+              weather.hourly.air_quality}
+            hourlyTime={dayOffset < 0 && weather.historical?.hourly.time ?
+              weather.historical.hourly.time :
+              weather.hourly.time}
+            dayOffset={dayOffset}
+            isLoading={isLoading}
+          />
         </div>
 
         {/* Hourly Forecast Section - Show for all days */}

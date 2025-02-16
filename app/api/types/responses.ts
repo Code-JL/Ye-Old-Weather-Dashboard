@@ -1,3 +1,5 @@
+import type { WeatherCode } from '../services/weather';
+
 // Geolocation API Response Types
 export interface IPAPIResponse {
   status: 'success' | 'fail';
@@ -65,6 +67,7 @@ export interface WeatherAPIResponse {
     wind_direction_10m: number[];
     wind_gusts_10m: number[];
     relative_humidity_2m: number[];
+    air_quality?: AirQualityResponse['hourly'];
   };
   daily: {
     time: string[];
@@ -81,6 +84,8 @@ export interface WeatherAPIResponse {
     relative_humidity_2m_mean?: number[];
     sunrise: string[];
     sunset: string[];
+    uv_index_max?: number[];
+    uv_index_clear_sky_max?: number[];
   };
 }
 
@@ -89,6 +94,15 @@ export interface AirQualityResponse {
     pm10: number;
     pm2_5: number;
     european_aqi: number;
+  };
+  hourly: {
+    time: string[];
+    pm10: number[];
+    pm2_5: number[];
+    european_aqi: number[];
+    us_aqi: number[];
+    uv_index: number[];
+    uv_index_clear_sky: number[];
   };
 }
 
@@ -117,4 +131,36 @@ export interface LocationData {
   longitude: number;
   state?: string;
   country?: string;
-} 
+}
+
+export type WeatherData = {
+  current: WeatherAPIResponse['current'] & {
+    weathercode: WeatherCode;
+    air_quality?: AirQualityResponse['current'];
+    uv_index?: UVIndexResponse;
+  };
+  hourly: WeatherAPIResponse['hourly'] & {
+    weathercode: WeatherCode[];
+    air_quality?: AirQualityResponse['hourly'];
+  };
+  daily: WeatherAPIResponse['daily'] & {
+    weathercode: WeatherCode[];
+    uv_index_clear_sky_max?: number[];
+    pm10_max?: number[];
+    pm10_mean?: number[];
+    pm2_5_max?: number[];
+    pm2_5_mean?: number[];
+    european_aqi_max?: number[];
+    european_aqi_mean?: number[];
+    us_aqi_max?: number[];
+    us_aqi_mean?: number[];
+  };
+  historical?: {
+    daily: Omit<WeatherAPIResponse['daily'], 'weathercode'> & {
+      weathercode: WeatherCode[];
+    };
+    hourly: WeatherAPIResponse['hourly'] & {
+      weathercode: WeatherCode[];
+    };
+  };
+}; 

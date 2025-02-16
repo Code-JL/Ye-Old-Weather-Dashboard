@@ -18,6 +18,8 @@ export type PrecisionLevel = '0' | '1' | '2' | '3' | '4' | '5';
 
 export type TimezoneFormat = 'abbreviation' | 'name' | 'utcOffset' | 'standardTime';
 
+export type AQIUnit = 'european' | 'us';
+
 export type TimeDisplaySettings = {
   showSeconds: boolean;
   timezoneFormat: TimezoneFormat;
@@ -29,6 +31,7 @@ export type TimeDisplaySettings = {
  * @property windSpeed - The preferred wind speed unit
  * @property humidity - The preferred humidity unit
  * @property precipitation - The preferred precipitation unit
+ * @property aqi - The preferred AQI unit
  * @property precision - The preferred number of decimal places for all measurements
  * @property timeDisplay - The preferred time display settings
  */
@@ -37,6 +40,7 @@ export type UnitSettings = {
   windSpeed: WindSpeedUnit;
   humidity: HumidityUnit;
   precipitation: PrecipitationUnit;
+  aqi: AQIUnit;
   precision: PrecisionLevel;
   timeDisplay: TimeDisplaySettings;
 };
@@ -49,6 +53,7 @@ export const DEFAULT_SETTINGS: Readonly<UnitSettings> = {
   windSpeed: 'kmh',
   humidity: 'percent',
   precipitation: 'mm',
+  aqi: 'european',
   precision: '1',
   timeDisplay: {
     showSeconds: false,
@@ -96,6 +101,7 @@ export function isUnitSettings(value: unknown): value is UnitSettings {
     'windSpeed',
     'humidity',
     'precipitation',
+    'aqi',
     'precision',
     'timeDisplay'
   ];

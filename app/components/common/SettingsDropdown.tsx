@@ -51,6 +51,11 @@ export default function SettingsDropdown() {
     { value: 'cm', label: 'Centimeters (cm)' }
   ];
 
+  const aqiOptions = [
+    { value: 'european', label: 'European AQI (1-100)' },
+    { value: 'us', label: 'US AQI (0-500)' }
+  ];
+
   const precisionOptions = [
     { value: '0', label: 'No decimals' },
     { value: '1', label: 'One decimal' },
@@ -200,6 +205,23 @@ export default function SettingsDropdown() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
+                <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-1">Air Quality Index</label>
+                <select
+                  value={settings.aqi}
+                  onChange={(e) => updateSettings({ ...settings, aqi: e.target.value as UnitSettings['aqi'] })}
+                  className="w-full bg-mono-50 dark:bg-mono-700 rounded p-1 text-sm hover:bg-mono-100 dark:hover:bg-mono-600 text-mono-900 dark:text-mono-100"
+                >
+                  {aqiOptions.map(unit => (
+                    <option key={unit.value} value={unit.value}>{unit.label}</option>
+                  ))}
+                </select>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
                 <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-1">Precipitation</label>
                 <select
                   value={settings.precipitation}
@@ -215,7 +237,7 @@ export default function SettingsDropdown() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
+                transition={{ delay: 0.7 }}
               >
                 <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-1">Precision</label>
                 <select
@@ -232,7 +254,7 @@ export default function SettingsDropdown() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
+                transition={{ delay: 0.8 }}
                 className="pt-2 border-t border-mono-200 dark:border-mono-700"
               >
                 <button

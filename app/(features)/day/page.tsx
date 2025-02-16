@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense, useMemo } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import DayDisplay from '@/app/components/weather/DayDisplay';
 import LoadingSpinner from '@/app/components/common/LoadingSpinner';
@@ -43,38 +43,27 @@ function DayContent() {
   const pastDays = dayOffset < 0 ? Math.abs(dayOffset) : 0;
   const forecastDays = dayOffset > 0 ? dayOffset + 1 : 1;
 
-  // Memoize weather parameters to prevent unnecessary re-renders
-  const weatherParams = useMemo(() => {
-    if (latFromUrl && lonFromUrl) {
-      const lat = parseFloat(latFromUrl);
-      const lon = parseFloat(lonFromUrl);
-      
-      if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
-        return {
-          latitude: lat,
-          longitude: lon,
-          pastDays,
-          forecastDays,
-          dayOffset
-        };
-      }
-    }
-    return {
-      latitude: 0,
-      longitude: 0,
-      pastDays,
-      forecastDays,
-      dayOffset
-    };
-  }, [latFromUrl, lonFromUrl, pastDays, forecastDays, dayOffset]);
-
   // Use weather hook with memoized parameters
   const {
     data: weather,
     isLoading: isWeatherLoading,
     error: weatherError,
     refetch: refetchWeather
-  } = useWeather(weatherParams);
+  } = useWeather(
+    latFromUrl && lonFromUrl ? {
+      latitude: parseFloat(latFromUrl),
+      longitude: parseFloat(lonFromUrl),
+      pastDays,
+      forecastDays: Math.max(forecastDays, 14),
+      dayOffset
+    } : {
+      latitude: 0,
+      longitude: 0,
+      pastDays,
+      forecastDays: Math.max(forecastDays, 14),
+      dayOffset
+    }
+  );
 
   // Validate coordinates
   useEffect(() => {

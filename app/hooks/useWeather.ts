@@ -15,6 +15,8 @@ export interface UseWeatherParams {
   pastDays?: number;
   forecastDays?: number;
   dayOffset?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
 interface UseWeatherReturn {
@@ -45,7 +47,9 @@ export function useWeather(
       prev.longitude !== params.longitude ||
       prev.pastDays !== params.pastDays ||
       prev.forecastDays !== params.forecastDays ||
-      prev.dayOffset !== params.dayOffset
+      prev.dayOffset !== params.dayOffset ||
+      prev.startDate !== params.startDate ||
+      prev.endDate !== params.endDate
     );
   }, [params]);
 
@@ -60,7 +64,11 @@ export function useWeather(
     try {
       setIsLoading(true);
       setError(null);
-      const weatherData = await fetchWeatherData(params);
+      const weatherData = await fetchWeatherData({
+        ...params,
+        startDate: params.startDate,
+        endDate: params.endDate
+      });
       if (weatherData) {
         setData(weatherData);
         setError(null);

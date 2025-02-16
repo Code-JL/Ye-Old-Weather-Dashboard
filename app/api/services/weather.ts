@@ -9,12 +9,13 @@ interface WeatherParams {
   longitude: number;
   pastDays?: number;
   forecastDays?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
 type WeatherResponse = { data: WeatherAPIResponse | null; error?: Error };
 type AirQualityResponseType = { data: AirQualityResponse | null; error?: Error };
 type UVIndexResponseType = { data: UVIndexResponse | null; error?: Error };
-type HistoricalResponse = { data: WeatherAPIResponse | null; error?: Error };
 
 /**
  * Constructs the API URL for weather data
@@ -42,16 +43,28 @@ export type WeatherData = {
   };
   hourly: WeatherAPIResponse['hourly'] & {
     weathercode: WeatherCode[];
+    air_quality?: AirQualityResponse['hourly'];
   };
   daily: WeatherAPIResponse['daily'] & {
     weathercode: WeatherCode[];
+    uv_index_clear_sky_max?: number[];
+    pm10_max?: number[];
+    pm10_mean?: number[];
+    pm2_5_max?: number[];
+    pm2_5_mean?: number[];
+    european_aqi_max?: number[];
+    european_aqi_mean?: number[];
+    us_aqi_max?: number[];
+    us_aqi_mean?: number[];
   };
   historical?: {
     daily: Omit<WeatherAPIResponse['daily'], 'weathercode'> & {
       weathercode: WeatherCode[];
+      uv_index_clear_sky_max?: number[];
     };
-    hourly: WeatherAPIResponse['hourly'] & {
+    hourly: Omit<WeatherAPIResponse['hourly'], 'weathercode'> & {
       weathercode: WeatherCode[];
+      air_quality?: AirQualityResponse['hourly'];
     };
   };
 };
@@ -63,7 +76,9 @@ export async function fetchWeatherData({
   latitude, 
   longitude, 
   pastDays = 0,
-  forecastDays = 1 
+  forecastDays = 1,
+  startDate = '',
+  endDate = ''
 }: WeatherParams): Promise<WeatherData> {
   try {
     // Prepare API requests
@@ -78,7 +93,10 @@ export async function fetchWeatherData({
       })),
       // Air quality data
       axios.get<AirQualityResponse>(constructWeatherUrl(WEATHER_API.AIR_QUALITY, latitude, longitude, {
-        current: 'pm10,pm2_5,european_aqi'
+        current: 'pm10,pm2_5,european_aqi',
+        hourly: 'pm10,pm2_5,european_aqi,us_aqi,uv_index,uv_index_clear_sky',
+        start_date: startDate,
+        end_date: endDate
       })),
       // UV index data
       axios.get<UVIndexResponse>(constructWeatherUrl(WEATHER_API.UV_INDEX, latitude, longitude, {}))
@@ -93,28 +111,37 @@ export async function fetchWeatherData({
           hourly: WEATHER_VARIABLES.HOURLY,
           past_days: pastDays,
           forecast_days: 1
+        })),
+        // Add historical air quality and UV index request
+        axios.get<AirQualityResponse>(constructWeatherUrl(WEATHER_API.AIR_QUALITY, latitude, longitude, {
+          hourly: 'pm10,pm2_5,european_aqi,us_aqi,uv_index,uv_index_clear_sky',
+          past_days: pastDays
         }))
       );
     }
 
     // Execute all requests in parallel
-    const [
-      weatherResponse,
-      airQualityResponse,
-      uvResponse,
-      historicalResponse
-    ] = await Promise.all(requests.map(request =>
+    const responses = await Promise.all(requests.map(request =>
       request.catch(error => ({
         data: null,
         error
       }))
-    )) as [WeatherResponse, AirQualityResponseType, UVIndexResponseType, HistoricalResponse?];
+    ));
+
+    const [
+      weatherResponse,
+      airQualityResponse,
+      uvResponse,
+      ...historicalResponses
+    ] = responses as [WeatherResponse, AirQualityResponseType, UVIndexResponseType, WeatherResponse, AirQualityResponseType];
+
+    const [historicalWeatherResponse, historicalAirQualityResponse] = historicalResponses;
 
     if (!weatherResponse?.data) {
       throw new Error('Failed to fetch weather data');
     }
 
-    console.log('Historical response:', historicalResponse?.data);
+    console.log('Historical response:', historicalWeatherResponse?.data);
 
     // Combine all data
     const weatherData: WeatherData = {
@@ -129,11 +156,22 @@ export async function fetchWeatherData({
       },
       hourly: {
         ...weatherResponse.data.hourly,
-        weathercode: weatherResponse.data.hourly.weathercode.map((code: number) => code as WeatherCode)
+        weathercode: weatherResponse.data.hourly.weathercode.map((code: number) => code as WeatherCode),
+        air_quality: airQualityResponse?.data?.hourly
       },
       daily: {
         ...weatherResponse.data.daily,
-        weathercode: weatherResponse.data.daily.weathercode.map((code: number) => code as WeatherCode)
+        weathercode: weatherResponse.data.daily.weathercode.map((code: number) => code as WeatherCode),
+        uv_index_max: weatherResponse.data.daily.uv_index_max,
+        uv_index_clear_sky_max: weatherResponse.data.daily.uv_index_clear_sky_max,
+        pm10_max: getDailyMax(airQualityResponse?.data?.hourly.pm10),
+        pm10_mean: getDailyMean(airQualityResponse?.data?.hourly.pm10),
+        pm2_5_max: getDailyMax(airQualityResponse?.data?.hourly.pm2_5),
+        pm2_5_mean: getDailyMean(airQualityResponse?.data?.hourly.pm2_5),
+        european_aqi_max: getDailyMax(airQualityResponse?.data?.hourly.european_aqi),
+        european_aqi_mean: getDailyMean(airQualityResponse?.data?.hourly.european_aqi),
+        us_aqi_max: getDailyMax(airQualityResponse?.data?.hourly.us_aqi),
+        us_aqi_mean: getDailyMean(airQualityResponse?.data?.hourly.us_aqi)
       }
     };
 
@@ -143,27 +181,31 @@ export async function fetchWeatherData({
     }
 
     // Add historical data if available
-    if (historicalResponse?.data) {
+    if (historicalWeatherResponse?.data) {
+      // Calculate daily air quality metrics for historical data
+      const historicalDailyMetrics = historicalAirQualityResponse?.data?.hourly ? {
+        european_aqi_max: getDailyMax(historicalAirQualityResponse.data.hourly.european_aqi),
+        european_aqi_mean: getDailyMean(historicalAirQualityResponse.data.hourly.european_aqi),
+        pm10_max: getDailyMax(historicalAirQualityResponse.data.hourly.pm10),
+        pm10_mean: getDailyMean(historicalAirQualityResponse.data.hourly.pm10),
+        pm2_5_max: getDailyMax(historicalAirQualityResponse.data.hourly.pm2_5),
+        pm2_5_mean: getDailyMean(historicalAirQualityResponse.data.hourly.pm2_5),
+        us_aqi_max: getDailyMax(historicalAirQualityResponse.data.hourly.us_aqi),
+        us_aqi_mean: getDailyMean(historicalAirQualityResponse.data.hourly.us_aqi)
+      } : {};
+
       weatherData.historical = {
         daily: {
-          time: historicalResponse.data.daily.time,
-          temperature_2m_max: historicalResponse.data.daily.temperature_2m_max,
-          temperature_2m_min: historicalResponse.data.daily.temperature_2m_min,
-          temperature_2m_mean: historicalResponse.data.daily.temperature_2m_mean,
-          precipitation_sum: historicalResponse.data.daily.precipitation_sum,
-          precipitation_probability_max: [],
-          weathercode: historicalResponse.data.daily.weathercode?.map((code: number) => code as WeatherCode),
-          wind_speed_10m_max: historicalResponse.data.daily.wind_speed_10m_max,
-          wind_direction_10m_dominant: historicalResponse.data.daily.wind_direction_10m_dominant,
-          relative_humidity_2m_max: historicalResponse.data.daily.relative_humidity_2m_max,
-          relative_humidity_2m_min: historicalResponse.data.daily.relative_humidity_2m_min,
-          relative_humidity_2m_mean: historicalResponse.data.daily.relative_humidity_2m_mean,
-          sunrise: historicalResponse.data.daily.sunrise,
-          sunset: historicalResponse.data.daily.sunset
+          ...historicalWeatherResponse.data.daily,
+          weathercode: historicalWeatherResponse.data.daily.weathercode?.map((code: number) => code as WeatherCode),
+          uv_index_clear_sky_max: historicalAirQualityResponse?.data ? 
+            getDailyMax(historicalAirQualityResponse.data.hourly.uv_index_clear_sky) : undefined,
+          ...historicalDailyMetrics
         },
         hourly: {
-          ...historicalResponse.data.hourly,
-          weathercode: historicalResponse.data.hourly.weathercode.map((code: number) => code as WeatherCode)
+          ...historicalWeatherResponse.data.hourly,
+          weathercode: historicalWeatherResponse.data.hourly.weathercode.map((code: number) => code as WeatherCode),
+          air_quality: historicalAirQualityResponse?.data?.hourly
         }
       };
     }
@@ -175,4 +217,27 @@ export async function fetchWeatherData({
     console.error('Error fetching weather data:', error);
     throw error;
   }
+}
+
+// Helper functions to calculate daily maximums and means
+function getDailyMax(hourlyData: number[] | undefined): number[] | undefined {
+  if (!hourlyData) return undefined;
+  
+  const dailyData: number[] = [];
+  for (let i = 0; i < hourlyData.length; i += 24) {
+    dailyData.push(Math.max(...hourlyData.slice(i, i + 24)));
+  }
+  return dailyData;
+}
+
+function getDailyMean(hourlyData: number[] | undefined): number[] | undefined {
+  if (!hourlyData) return undefined;
+
+  const dailyData: number[] = [];  
+  for (let i = 0; i < hourlyData.length; i += 24) {
+    const dayData = hourlyData.slice(i, i + 24);
+    const dayMean = dayData.reduce((a, b) => a + b, 0) / dayData.length;
+    dailyData.push(dayMean);
+  }
+  return dailyData;
 } 
