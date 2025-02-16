@@ -20,6 +20,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import WindDirectionIndicator from './WindDirectionIndicator';
 import type { WeatherAPIResponse, AirQualityResponse, UVIndexResponse } from '@/app/api/types/responses';
 import LoadingSpinner from '@/app/components/common/LoadingSpinner';
+import SunriseSunset from './SunriseSunset';
 
 // Weather code type
 type WeatherCode = 0 | 1 | 2 | 3 | 45 | 48 | 51 | 53 | 55 | 56 | 57 | 61 | 63 | 65 | 66 | 67 | 71 | 73 | 75 | 77 | 80 | 81 | 82 | 85 | 86 | 95 | 96 | 99;
@@ -290,6 +291,70 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false, dayOff
     return weather.daily.weathercode[dayIndex];
   };
 
+  // Helper to get the sunrise and sunset times
+  const getSunTimes = () => {
+    // Default values
+    const defaultTimes = {
+      sunrise: '',
+      sunset: ''
+    };
+
+    // Debug logging
+    console.log('Weather data:', weather);
+    console.log('Day offset:', dayOffset);
+    console.log('Day index:', dayIndex);
+
+    // Check if we have the required data
+    if (!weather?.daily) {
+      console.log('No daily weather data available');
+      return defaultTimes;
+    }
+
+    if (dayOffset < 0 && weather.historical?.daily) {
+      // For past days, use historical data
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + dayOffset);
+      const targetDateStr = targetDate.toISOString().split('T')[0];
+      
+      console.log('Historical data:', weather.historical.daily);
+      console.log('Target date:', targetDateStr);
+      
+      const dateIndex = weather.historical.daily.time.findIndex(date => date === targetDateStr);
+      console.log('Historical date index:', dateIndex);
+      
+      if (dateIndex !== -1 && 
+          weather.historical.daily.sunrise?.[dateIndex] && 
+          weather.historical.daily.sunset?.[dateIndex]) {
+        const times = {
+          sunrise: weather.historical.daily.sunrise[dateIndex],
+          sunset: weather.historical.daily.sunset[dateIndex]
+        };
+        console.log('Historical times:', times);
+        return times;
+      }
+      console.log('No historical times found, using defaults');
+      return defaultTimes;
+    }
+    
+    // For today and future days, use daily forecast
+    console.log('Daily data:', weather.daily);
+    console.log('Sunrise array:', weather.daily.sunrise);
+    console.log('Sunset array:', weather.daily.sunset);
+
+    // Make sure the index exists in the arrays and the arrays exist
+    if (weather.daily.sunrise?.[dayIndex] && weather.daily.sunset?.[dayIndex]) {
+      const times = {
+        sunrise: weather.daily.sunrise[dayIndex],
+        sunset: weather.daily.sunset[dayIndex]
+      };
+      console.log('Forecast times:', times);
+      return times;
+    }
+
+    console.log('No forecast times found, using defaults');
+    return defaultTimes;
+  };
+
   // Helper to render humidity section
   const renderHumidity = () => {
     if (dayOffset >= 0) {
@@ -421,7 +486,7 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false, dayOff
             {getDayTitle(dayOffset)}
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Temperature Section */}
             <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg">
               <h3 className="text-lg font-medium text-mono-800 dark:text-mono-100 mb-2">Temperature</h3>
@@ -490,8 +555,50 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false, dayOff
               </div>
             </div>
 
+            {/* Humidity Section */}
+            <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-mono-800 dark:text-mono-100 mb-4">Humidity</h3>
+              <div className="space-y-4">
+                {renderHumidity()}
+              </div>
+            </div>
+
+            {/* Precipitation Section */}
+            <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-mono-800 dark:text-mono-100 mb-2">Precipitation</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-mono-600 dark:text-mono-300">Total:</span>
+                  <WeatherValue 
+                    value={precipValues.total}
+                    convert={convertPrecipitation as ConversionFunction}
+                    unit={settings.precipitation}
+                    label="precipitation"
+                    fromUnit="mm"
+                  />
+                </div>
+                {precipValues.probability !== null && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-mono-600 dark:text-mono-300">Chance:</span>
+                    <div className="flex items-center">
+                      <PrecipitationIcon 
+                        weatherCode={weatherCode}
+                        className="w-4 h-4 text-mono-600 dark:text-mono-400 mr-1" 
+                      />
+                      <span className="font-semibold text-mono-800 dark:text-mono-100">
+                        {precipValues.probability}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Wind and Daylight Sections */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             {/* Wind Section */}
-            <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg col-span-2 lg:col-span-1">
+            <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg">
               <h3 className="text-lg font-medium text-mono-800 dark:text-mono-100 mb-4">Wind</h3>
               <div className="space-y-6">
                 {/* Wind Speed and Direction */}
@@ -574,43 +681,15 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false, dayOff
               </div>
             </div>
 
-            {/* Humidity Section */}
-            <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-mono-800 dark:text-mono-100 mb-4">Humidity</h3>
-              <div className="space-y-4">
-                {renderHumidity()}
-              </div>
-            </div>
-
-            {/* Precipitation Section */}
-            <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg">
-              <h3 className="text-lg font-medium text-mono-800 dark:text-mono-100 mb-2">Precipitation</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-mono-600 dark:text-mono-300">Total:</span>
-                  <WeatherValue 
-                    value={precipValues.total}
-                    convert={convertPrecipitation as ConversionFunction}
-                    unit={settings.precipitation}
-                    label="precipitation"
-                    fromUnit="mm"
-                  />
+            {/* Sunrise/Sunset Section */}
+            <div>
+              {weather?.daily?.sunrise && weather?.daily?.sunset ? (
+                <SunriseSunset {...getSunTimes()} />
+              ) : (
+                <div className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg text-center">
+                  <span className="text-mono-500 dark:text-mono-400">Sunrise/Sunset data not available</span>
                 </div>
-                {precipValues.probability !== null && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-mono-600 dark:text-mono-300">Chance:</span>
-                    <div className="flex items-center">
-                      <PrecipitationIcon 
-                        weatherCode={weatherCode}
-                        className="w-4 h-4 text-mono-600 dark:text-mono-400 mr-1" 
-                      />
-                      <span className="font-semibold text-mono-800 dark:text-mono-100">
-                        {precipValues.probability}%
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>

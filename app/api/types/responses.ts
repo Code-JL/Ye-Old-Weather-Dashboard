@@ -79,6 +79,8 @@ export interface WeatherAPIResponse {
     relative_humidity_2m_max?: number[];
     relative_humidity_2m_min?: number[];
     relative_humidity_2m_mean?: number[];
+    sunrise: string[];
+    sunset: string[];
   };
 }
 

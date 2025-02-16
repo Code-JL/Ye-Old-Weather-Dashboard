@@ -157,7 +157,9 @@ export async function fetchWeatherData({
           wind_direction_10m_dominant: historicalResponse.data.daily.wind_direction_10m_dominant,
           relative_humidity_2m_max: historicalResponse.data.daily.relative_humidity_2m_max,
           relative_humidity_2m_min: historicalResponse.data.daily.relative_humidity_2m_min,
-          relative_humidity_2m_mean: historicalResponse.data.daily.relative_humidity_2m_mean
+          relative_humidity_2m_mean: historicalResponse.data.daily.relative_humidity_2m_mean,
+          sunrise: historicalResponse.data.daily.sunrise,
+          sunset: historicalResponse.data.daily.sunset
         },
         hourly: {
           ...historicalResponse.data.hourly,

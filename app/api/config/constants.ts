@@ -32,6 +32,6 @@ export const API_CONFIG = {
 export const WEATHER_VARIABLES = {
   CURRENT: 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,weathercode,cloud_cover',
   HOURLY: 'temperature_2m,precipitation_probability,weathercode,wind_speed_10m,wind_direction_10m,relative_humidity_2m',
-  DAILY: 'weathercode,temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,wind_direction_10m_dominant,relative_humidity_2m_max,relative_humidity_2m_min,relative_humidity_2m_mean',
-  HISTORICAL: 'temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,weathercode,wind_speed_10m_max,wind_direction_10m_dominant,relative_humidity_2m_max,relative_humidity_2m_min,relative_humidity_2m_mean'
+  DAILY: 'weathercode,temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,wind_direction_10m_dominant,relative_humidity_2m_max,relative_humidity_2m_min,relative_humidity_2m_mean,sunrise,sunset',
+  HISTORICAL: 'temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,weathercode,wind_speed_10m_max,wind_direction_10m_dominant,relative_humidity_2m_max,relative_humidity_2m_min,relative_humidity_2m_mean,sunrise,sunset'
 } as const; 
