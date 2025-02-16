@@ -65,11 +65,6 @@ function NavigationContent() {
   const { showToast } = useNotifications();
   const { location, isLoading: isLocationLoading } = useLocationContext();
 
-  // Get location data from URL parameters
-  const cityFromUrl = location?.city || '';
-  const stateFromUrl = location?.state || '';
-  const countryFromUrl = location?.country || '';
-
   const handleSearchParamsChange = useCallback(() => {
     showToast('Location updated');
   }, [showToast]);
@@ -152,7 +147,7 @@ function NavigationContent() {
             </div>
 
             {/* Current Location Display - Always visible on smaller screens */}
-            {cityFromUrl && (
+            {location && (
               <div className="flex items-center ml-6">
                 <Link 
                   href="/search"
@@ -162,7 +157,7 @@ function NavigationContent() {
                 >
                   <span className="flex items-center gap-2">
                     <span className="line-clamp-2 lg:line-clamp-1 xl:line-clamp-2">
-                      {[cityFromUrl, stateFromUrl, countryFromUrl].filter(Boolean).join(', ')}
+                      {[location.city, location.state, location.country].filter(Boolean).join(', ')}
                     </span>
                     <svg 
                       className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0" 
