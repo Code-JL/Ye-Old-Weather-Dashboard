@@ -75,7 +75,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     } finally {
       isDetectingRef.current = false;
     }
-  }, [detectLocationHook, router, showToast, isLocationRequired, setIsLocationRequired]);
+  }, [detectLocationHook, router, showToast]);
 
   // Detect location if required and not present, or if on a location-requiring page
   useEffect(() => {
