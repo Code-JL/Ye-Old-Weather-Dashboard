@@ -8,6 +8,7 @@ import type { LocationData } from '@/app/api/types/responses';
 interface UseLocationOptions {
   retryCount?: number;
   retryDelay?: number;
+  initialLocation?: LocationData | null;
 }
 
 interface UseLocationReturn {
@@ -24,15 +25,16 @@ const DEFAULT_RETRY_COUNT = 3;
 const DEFAULT_RETRY_DELAY = 1000; // 1 second
 
 export function useLocation(options: UseLocationOptions = {}): UseLocationReturn {
-  const [location, setLocation] = useState<LocationData | null>(null);
+  const {
+    retryCount = DEFAULT_RETRY_COUNT,
+    retryDelay = DEFAULT_RETRY_DELAY,
+    initialLocation = null
+  } = options;
+
+  const [location, setLocation] = useState<LocationData | null>(initialLocation);
   const [searchResults, setSearchResults] = useState<LocationData[]>([]);
   const [error, setError] = useState<Error | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  const {
-    retryCount = DEFAULT_RETRY_COUNT,
-    retryDelay = DEFAULT_RETRY_DELAY
-  } = options;
 
   const detectLocationWithRetry = useCallback(async (attempt = 0): Promise<LocationData | null> => {
     try {

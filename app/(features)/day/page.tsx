@@ -8,6 +8,7 @@ import NotificationsWrapper from '@/app/components/common/NotificationsWrapper';
 import { useWeather } from '@/app/hooks/useWeather';
 import { useNotifications } from '@/app/hooks/useNotifications';
 import { useLocationContext } from '@/app/contexts/LocationContext';
+import { useRequireLocation } from '@/app/hooks/useRequireLocation';
 
 export default function DayPage() {
   return (
@@ -76,6 +77,8 @@ function DayContent() {
       }
     }
   }, [latFromUrl, lonFromUrl, showError]);
+
+  useRequireLocation();
 
   return (
     <NotificationsWrapper

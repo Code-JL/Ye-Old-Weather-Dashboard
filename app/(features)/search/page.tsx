@@ -131,7 +131,7 @@ function SearchContent() {
                 }}
                 onKeyDown={handleKeyDown}
                 placeholder="Search for a city..."
-                className="w-full px-4 py-2 rounded-md bg-mono-100 dark:bg-mono-700 text-mono-800 dark:text-mono-100 placeholder-mono-500 dark:placeholder-mono-400 focus:outline-none focus:ring-2 focus:ring-mono-400 dark:focus:ring-mono-500"
+                className="w-full px-4 py-2 rounded-md bg-mono-300 dark:bg-mono-700 text-mono-800 dark:text-mono-100 placeholder-mono-500 dark:placeholder-mono-400 focus:outline-none focus:ring-2 focus:ring-mono-400 dark:focus:ring-mono-500"
               />
 
               {showSuggestions && searchResults.length > 0 && (

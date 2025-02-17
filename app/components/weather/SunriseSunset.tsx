@@ -34,25 +34,18 @@ const SunriseSunset = memo(function SunriseSunset({ sunrise, sunset }: SunriseSu
     <div className="bg-gradient-to-r from-mono-100 to-mono-300 dark:from-mono-700 dark:to-mono-800 rounded-lg p-6">
       <h3 className="text-xl font-semibold text-mono-800 dark:text-mono-100 mb-4">Daylight</h3>
       
-      {/* Simplified sun graphic */}
+      {/* Sun graphic */}
       <div className="flex justify-center mb-6">
         <svg 
-          className="w-12 h-12 text-mono-500 dark:text-mono-400" 
-          fill="none"
-          stroke="currentColor"
+          xmlns="http://www.w3.org/2000/svg" 
+          width="48" 
+          height="48" 
           viewBox="0 0 24 24"
+          className="text-mono-600 dark:text-mono-300"
         >
-          <circle 
-            cx="12" 
-            cy="12" 
-            r="5" 
-            fill="currentColor"
-            className="text-mono-200 dark:text-mono-700"
-          />
-          <path
-            strokeLinecap="round"
-            strokeWidth="2"
-            d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+          <path 
+            fill="currentColor" 
+            d="M12 1a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V2a1 1 0 0 1 1-1m0 18a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1M1 12a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H2a1 1 0 0 1-1-1m18 0a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2h-2a1 1 0 0 1-1-1M7.047 16.953a1 1 0 0 1 0 1.414l-1.41 1.41a1 1 0 1 1-1.414-1.414l1.41-1.41a1 1 0 0 1 1.414 0m12.73-12.73a1 1 0 0 1 0 1.414l-1.41 1.41a1 1 0 1 1-1.414-1.414l1.41-1.41a1 1 0 0 1 1.414 0m-2.824 12.73a1 1 0 0 1 1.414 0l1.41 1.41a1 1 0 1 1-1.414 1.414l-1.41-1.41a1 1 0 0 1 0-1.414M4.223 4.223a1 1 0 0 1 1.414 0l1.41 1.41a1 1 0 0 1-1.414 1.414l-1.41-1.41a1 1 0 0 1 0-1.414M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10"
           />
         </svg>
       </div>

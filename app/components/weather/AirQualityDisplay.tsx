@@ -219,7 +219,7 @@ export default function AirQualityDisplay({
   };
 
   return (
-    <section className="h-full space-y-2 p-4 bg-mono-50 dark:bg-mono-700 rounded-lg border border-mono-200 dark:border-mono-600">
+    <section className="bg-mono-50 dark:bg-mono-700 p-4 rounded-lg">
       <h3 className="font-semibold text-lg mb-3 text-mono-800 dark:text-mono-100">Air Quality</h3>
       {airQualityData !== undefined ? (
         <>

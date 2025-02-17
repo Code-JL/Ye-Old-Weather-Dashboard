@@ -146,7 +146,7 @@ function NavigationContent() {
               ))}
             </div>
 
-            {/* Current Location Display - Always visible on smaller screens */}
+            {/* Current Location Display - Always visible */}
             {location && (
               <div className="flex items-center ml-6">
                 <Link 
@@ -178,7 +178,7 @@ function NavigationContent() {
             )}
           </div>
 
-          {/* Desktop Right Section - Time Display visible on larger screens, other controls in mobile menu */}
+          {/* Desktop Right Section and Mobile Menu */}
           <div className="flex items-center gap-4">
             {/* Time Display - Only visible on md and up */}
             <div className="hidden md:block">

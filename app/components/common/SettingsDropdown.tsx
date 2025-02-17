@@ -108,7 +108,7 @@ export default function SettingsDropdown() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                <label className="block text-sm font-medium mb-1">Time Display</label>
+                <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-1">Time Display</label>
                 <div className="space-y-2">
                   <div className="flex items-center">
                     <input
@@ -128,7 +128,7 @@ export default function SettingsDropdown() {
                   </div>
 
                   <div>
-                    <label className="block text-xs text-mono-700 dark:text-mono-300 mb-1">Timezone Format</label>
+                    <label className="block text-sm font-medium text-mono-700 dark:text-mono-300 mb-1">Timezone Format</label>
                     <select
                       value={settings.timeDisplay?.timezoneFormat ?? 'abbreviation'}
                       onChange={(e) => updateSettings({

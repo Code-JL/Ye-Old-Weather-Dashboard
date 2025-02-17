@@ -8,6 +8,7 @@ import NotificationsWrapper from '@/app/components/common/NotificationsWrapper';
 import { useWeather } from '@/app/hooks/useWeather';
 import { useNotifications } from '@/app/hooks/useNotifications';
 import { useLocationContext } from '@/app/contexts/LocationContext';
+import { useRequireLocation } from '@/app/hooks/useRequireLocation';
 
 export default function Dashboard() {
   return (
@@ -56,6 +57,8 @@ function DashboardContent() {
     toastState: { message: toastMessage, isVisible: isToastVisible },
     errorState
   } = useNotifications();
+
+  useRequireLocation();
 
   return (
     <NotificationsWrapper

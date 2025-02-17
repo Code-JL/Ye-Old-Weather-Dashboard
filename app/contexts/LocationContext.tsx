@@ -1,10 +1,10 @@
 'use client';
 
-import { createContext, useContext, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useEffect, useCallback, useRef, useState } from 'react';
 import { useLocation } from '@/app/hooks/useLocation';
 import { useNotifications } from '@/app/hooks/useNotifications';
-import { createLocationUrlParams } from '@/app/hooks/useLocationRedirect';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { createLocationUrlParams, createLocationFromUrlParams } from '@/app/hooks/useLocationRedirect';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import type { LocationData } from '@/app/api/types/responses';
 
 interface LocationContextProps {
@@ -13,7 +13,8 @@ interface LocationContextProps {
   error: Error | null;
   searchLocation: (query: string) => Promise<LocationData[]>;
   searchResults: LocationData[];
-  detectLocation: () => Promise<LocationData | null>; // Add detectLocation
+  detectLocation: () => Promise<LocationData | null>;
+  setIsLocationRequired: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const LocationContext = createContext<LocationContextProps | undefined>(undefined);
@@ -27,23 +28,26 @@ export function useLocationContext() {
 }
 
 export function LocationProvider({ children }: { children: React.ReactNode }) {
+  const searchParams = useSearchParams();
+  const initialLocation = searchParams ? createLocationFromUrlParams(new URLSearchParams(searchParams.toString())) : null;
+  const pathname = usePathname();
+
   const {
     location,
     isLoading,
     error,
     searchLocation,
     searchResults,
-    detectLocation: detectLocationHook, // Rename to avoid conflict
-  } = useLocation();
+    detectLocation: detectLocationHook,
+  } = useLocation({ initialLocation });
 
-  const { showToast } = useNotifications(); // Use useNotifications
+  const { showToast } = useNotifications();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const isDetectingRef = useRef(false);
+  const [isLocationRequired, setIsLocationRequired] = useState(false);
 
   // Handle location detection and URL update
   const detectLocation = useCallback(async () => {
-    // Prevent multiple simultaneous detection attempts
     if (isDetectingRef.current) {
       return null;
     }
@@ -53,38 +57,34 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
       const locationData = await detectLocationHook();
       if (locationData) {
         const urlParams = createLocationUrlParams(locationData);
-        // Get the current path
         const currentPath = window.location.pathname;
-        // Preserve any existing query parameters that aren't location-related
         const existingParams = new URLSearchParams(window.location.search);
         const locationParams = ['city', 'state', 'country', 'lat', 'lon'];
         locationParams.forEach(param => existingParams.delete(param));
-        // Combine location params with existing params
         const combinedParams = new URLSearchParams(urlParams.toString());
         existingParams.forEach((value, key) => combinedParams.append(key, value));
         router.replace(`${currentPath}?${combinedParams.toString()}`);
         return locationData;
       } else {
-        showToast('Unable to detect your location. Please use the dashboard to select a location.');
+        showToast('Unable to detect your location. Please use the search to select a location.');
         return null;
       }
     } catch {
-      showToast('Unable to detect your location. Please use the dashboard to select a location.');
+      showToast('Unable to detect your location. Please use the search to select a location.');
       return null;
     } finally {
       isDetectingRef.current = false;
     }
-  }, [detectLocationHook, router, showToast]);
+  }, [detectLocationHook, router, showToast, isLocationRequired, setIsLocationRequired]);
 
+  // Detect location if required and not present, or if on a location-requiring page
   useEffect(() => {
-    const cityFromUrl = searchParams?.get('city');
-    const latFromUrl = searchParams?.get('lat');
-    const lonFromUrl = searchParams?.get('lon');
-    
-    if (!cityFromUrl || !latFromUrl || !lonFromUrl) {
+    const locationFromUrl = searchParams ? createLocationFromUrlParams(new URLSearchParams(searchParams.toString())) : null;
+    const isLocationRequiringPage = pathname ? ['/day', '/dashboard', '/history'].includes(pathname) : false;
+    if ((isLocationRequired || isLocationRequiringPage) && !locationFromUrl && !location && !isDetectingRef.current) {
       detectLocation();
     }
-  }, [searchParams, detectLocation]);
+  }, [searchParams, location, detectLocation, isLocationRequired, pathname]);
 
   const contextValue: LocationContextProps = {
     location,
@@ -92,7 +92,8 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     error,
     searchLocation,
     searchResults,
-    detectLocation, // Expose detectLocation
+    detectLocation,
+    setIsLocationRequired
   };
 
   return (

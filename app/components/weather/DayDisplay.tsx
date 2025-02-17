@@ -124,55 +124,43 @@ const DayDisplay = memo(function DayDisplay({ weather, isLoading = false, dayOff
   return (
     <ErrorBoundary>
       <div className="space-y-8">
-        {/* Current Conditions Card */}
-        <div className="bg-white dark:bg-mono-800 rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-semibold text-mono-800 dark:text-mono-100 mb-6">
+        <h2 className="text-2xl font-semibold text-mono-800 dark:text-mono-100 mb-6">
             {getDayTitle(dayOffset)}
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Temperature Section */}
-            <TemperatureDisplay 
-              weather={weather}
-              dayOffset={dayOffset}
-              isLoading={isLoading}
-            />
+        </h2> 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Temperature Section */}
+          <TemperatureDisplay 
+            weather={weather}
+            dayOffset={dayOffset}
+            isLoading={isLoading}
+          />
 
-            {/* Humidity Section */}
-            <HumidityDisplay 
-              weather={weather}
-              dayOffset={dayOffset}
-              isLoading={isLoading}
-            />
+          {/* Humidity Section */}
+          <HumidityDisplay 
+            weather={weather}
+            dayOffset={dayOffset}
+            isLoading={isLoading}
+          />
 
-            {/* Precipitation Section */}
-            <PrecipitationDisplay 
-              weather={weather}
-              dayOffset={dayOffset}
-              isLoading={isLoading}
-            />
-          </div>
+          {/* Precipitation Section */}
+          <PrecipitationDisplay 
+            weather={weather}
+            dayOffset={dayOffset}
+            isLoading={isLoading}
+          />
+          {/* Wind Section */}
+          <WindDisplay 
+            weather={weather}
+            dayOffset={dayOffset}
+            isLoading={isLoading}
+          />
 
-          {/* Wind and Daylight Sections */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            {/* Wind Section */}
-            <WindDisplay 
-              weather={weather}
-              dayOffset={dayOffset}
-              isLoading={isLoading}
-            />
-
-            {/* Sunrise/Sunset Section */}
-            <DaylightDisplay 
-              sunrise={sunTimes.sunrise}
-              sunset={sunTimes.sunset}
-              isLoading={isLoading}
-            />
-          </div>
-        </div>
-
-        {/* UV Index and Air Quality Sections */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Sunrise/Sunset Section */}
+          <DaylightDisplay 
+            sunrise={sunTimes.sunrise}
+            sunset={sunTimes.sunset}
+            isLoading={isLoading}
+          />
           {/* UV Index Section */}
           <UVIndexDisplay
             currentUVIndex={dayOffset === 0 ? weather.current.uv_index?.now.uvi : undefined}
