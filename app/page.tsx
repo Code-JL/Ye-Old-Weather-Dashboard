@@ -1,14 +1,26 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    router.push('/day');
-  }, [router]);
+    if (hasRedirected.current) {
+      return; // Skip if we've already redirected
+    }
+
+    // Preserve all existing URL parameters
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    const url = `/day${params.toString() ? `?${params.toString()}` : ''}`;
+    router.push(url);
+    
+    // Mark that we've performed the redirect
+    hasRedirected.current = true;
+  }, [router, searchParams]);
 
   // Return a loading state while redirecting
   return (

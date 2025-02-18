@@ -119,6 +119,18 @@ function NavigationContent() {
     return `${path}${params.toString() ? `?${params.toString()}` : ''}`;
   }, [searchParams]);
 
+  // Helper to construct URL with location parameters
+  const constructLocationUrl = useCallback((path: string) => {
+    if (!location) return path;
+    const params = new URLSearchParams();
+    params.set('city', location.city);
+    if (location.state) params.set('state', location.state);
+    if (location.country) params.set('country', location.country);
+    params.set('lat', location.latitude.toFixed(2));
+    params.set('lon', location.longitude.toFixed(2));
+    return `${path}${params.toString() ? `?${params.toString()}` : ''}`;
+  }, [location]);
+
   return (
     <nav className="bg-white dark:bg-mono-800 shadow-sm">
       <div className="max-w-full mx-auto px-2 sm:px-4 lg:px-6 xl:px-8 2xl:px-10">
@@ -126,7 +138,7 @@ function NavigationContent() {
           <div className="flex items-center flex-1">
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center">
-              <Link href={constructNonDayUrl('/')}>
+              <Link href={constructLocationUrl('/')}>
                 <span className="text-xl font-title text-mono-800 dark:text-mono-100">
                   Ye Olde Weather
                 </span>
